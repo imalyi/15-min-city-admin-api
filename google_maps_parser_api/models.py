@@ -1,4 +1,4 @@
-from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField
+from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 
 
 class Client(Model):
@@ -12,7 +12,7 @@ class Client(Model):
         return f"{self.name}({self.last_online})"
 
 
-class Credentials(Model):
+class Credential(Model):
     token = CharField(max_length=560)
     name = CharField(max_length=500)
     request_limit = IntegerField(default=5000) # per day
@@ -48,7 +48,13 @@ class Status(Model):
         (ERROR, 'Error'),
         (STOPPED, 'Stopped')
     )
-    values = CharField(choices=STATUS, max_length=1)
+    value = CharField(choices=STATUS, max_length=1, unique=True)
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
 
 
 class Coordinate(Model):
@@ -58,9 +64,9 @@ class Coordinate(Model):
 
 
 class SubTask(Model):
-    place = ForeignKey(PlaceType)
-    coordinates = ForeignKey(Coordinate)
-    status = ForeignKey(Status)
+    place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
+    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
+    status = ForeignKey(Status, on_delete=DO_NOTHING)
     start = DateTimeField()
     finish = DateTimeField()
     created = DateTimeField(auto_now=True)
@@ -68,16 +74,16 @@ class SubTask(Model):
 
 class RequestData(Model):
     """ Store info about amount of request to api"""
-    key = ForeignKey(Credentials)
+    key = ForeignKey(Credential, on_delete=DO_NOTHING)
     count = IntegerField(default=0)
     time = DateTimeField(auto_now=True)
 
 
 class Task(Model):
-    client = ForeignKey(Client)
+    client = ForeignKey(Client, on_delete=DO_NOTHING)
     sub_task = ManyToManyField(SubTask)
     date = DateTimeField(auto_now=True)
-    credentials = ForeignKey(Credentials)
+    credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
 
     def __repr__(self):
         return f"{self.client} - {self.date} - {self.credentials}"
