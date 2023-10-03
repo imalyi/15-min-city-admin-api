@@ -1,5 +1,4 @@
 from rest_framework.serializers import Serializer, ModelSerializer
-
 from google_maps_parser_api.models import Client, Credential, PlaceType, Status, Coordinate
 
 
