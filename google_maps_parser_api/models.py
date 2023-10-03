@@ -3,7 +3,7 @@ from django.db.models import Model, IntegerField, CharField, ManyToManyField, Fo
 
 class Client(Model):
     name = CharField(max_length=250)
-    last_online = DateTimeField(blank=True, default=None)
+    last_online = DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}({self.last_online})"
