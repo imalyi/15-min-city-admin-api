@@ -1,5 +1,5 @@
-rm db.sqlite3
-rm -r google_maps_parser_api/migrations/
+#rm db.sqlite3
+#rm -r google_maps_parser_api/migrations/
 
 python3 manage.py makemigrations
 python3 manage.py migrate

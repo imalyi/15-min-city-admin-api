@@ -39,6 +39,7 @@ class SubTaskSerializer(ModelSerializer):
 
 
 class TaskSerializer(ModelSerializer):
+    sub_task = SubTaskSerializer(many=True)
     class Meta:
         model = Task
         fields = "__all__"
