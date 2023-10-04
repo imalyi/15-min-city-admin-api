@@ -10,3 +10,6 @@ DJANGO_SUPERUSER_USERNAME=igor \
 DJANGO_SUPERUSER_PASSWORD=343877 \
 DJANGO_SUPERUSER_EMAIL="admin@admin.com" \
 python manage.py createsuperuser --noinput
+
+
+python3 manage.py runserver
