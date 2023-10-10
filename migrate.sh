@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm db.sqlite3
 rm -r google_maps_parser_api/migrations/
 
@@ -12,4 +14,4 @@ DJANGO_SUPERUSER_EMAIL="admin@admin.com" \
 python manage.py createsuperuser --noinput
 
 
-python3 manage.py runserver
+python3 manage.py runserver 0.0.0.0:8081

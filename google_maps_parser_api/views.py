@@ -1,12 +1,7 @@
 from rest_framework.generics import ListCreateAPIView
 
-from google_maps_parser_api.serializers import ClientSerializer, CredentialSerializer, PlaceTypeSerializer, StatusSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer, RequestDataSerializer
-from google_maps_parser_api.models import Client, Credential, PlaceType, Status, Coordinate, SubTask, Task, RequestData
-
-
-class ClientView(ListCreateAPIView):
-    serializer_class = ClientSerializer
-    queryset = Client.objects.all()
+from google_maps_parser_api.serializers import CredentialSerializer, PlaceTypeSerializer, StatusSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
+from google_maps_parser_api.models import Credential, PlaceType, Status, Coordinate, SubTask, Task
 
 
 class CredentialView(ListCreateAPIView):
@@ -38,7 +33,3 @@ class TaskView(ListCreateAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
 
-
-class RequestDataView(ListCreateAPIView):
-    serializer_class = RequestDataSerializer
-    queryset = RequestData.objects.all()
