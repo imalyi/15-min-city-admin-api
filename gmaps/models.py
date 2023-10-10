@@ -1,15 +1,17 @@
 import datetime
 
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
-from django.db.models import Sum
+from django.db.models import Sum, Manager
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
-WAITING = 'Waiting'
-DONE = 'Done'
-RUNNING = 'Running'
-ERROR = 'Error'
-STOPPED = 'Stopped'
+WAITING = 'waiting'
+DONE = 'done'
+RUNNING = 'running'
+ERROR = 'error'
+STOPPED = 'stopped'
+CANCELED = 'canceled'
+
 
 
 class Credential(Model):
@@ -48,19 +50,15 @@ class Coordinate(Model):
 
 class SubTask(Model):
 
-    WAITING = 'Waiting'
-    DONE = 'Done'
-    RUNNING = 'Running'
-    ERROR = 'Error'
-    STOPPED = 'Stopped'
-
     STATUS = (
         (WAITING, 'waiting'),
         (DONE, 'done'),
         (RUNNING, 'running'),
         (ERROR, 'error'),
-        (STOPPED, 'stopped')
+        (STOPPED, 'stopped'),
+        (CANCELED, 'canceled')
     )
+
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
     coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
     status = CharField(choices=STATUS, default=WAITING, max_length=20)
@@ -77,12 +75,22 @@ class SubTask(Model):
         return str(self.start)
 
 
+
 class Task(Model):
+    STATUS = (
+        (WAITING, 'waiting'),
+        (DONE, 'done'),
+        (RUNNING, 'running'),
+        (ERROR, 'error'),
+        (STOPPED, 'stopped'),
+        (CANCELED, 'canceled')
+    )
+
     name = CharField(max_length=250)
     sub_task = ManyToManyField(SubTask)
     date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
-
+    status = CharField(choices=STATUS, default=WAITING, max_length=20)
     @property
     def subtask_count(self):
         return self.sub_task.count()
@@ -104,4 +112,7 @@ class Task(Model):
         return self.sub_task.filter(finish__isnull=False).exists()
 
     def __repr__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
