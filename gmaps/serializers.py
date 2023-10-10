@@ -1,11 +1,5 @@
 from rest_framework.serializers import Serializer, ModelSerializer
-from google_maps_parser_api.models import Client, Credential, PlaceType, Status, Coordinate, SubTask, Task, RequestData
-
-
-class ClientSerializer(ModelSerializer):
-    class Meta:
-        model = Client
-        fields = "__all__"
+from gmaps.models import Credential, PlaceType, Status, Coordinate, SubTask, Task
 
 
 class CredentialSerializer(ModelSerializer):
@@ -42,10 +36,4 @@ class TaskSerializer(ModelSerializer):
     sub_task = SubTaskSerializer(many=True)
     class Meta:
         model = Task
-        fields = "__all__"
-
-
-class RequestDataSerializer(ModelSerializer):
-    class Meta:
-        model = RequestData
         fields = "__all__"
