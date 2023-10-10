@@ -18,4 +18,4 @@ DJANGO_SUPERUSER_EMAIL="admin@admin.com" \
 python3 manage.py createsuperuser --noinput
 
 
-python3 manage.py runserver
+python3 manage.py runserver 0.0.0.0:8081
