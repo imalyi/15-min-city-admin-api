@@ -30,8 +30,7 @@ class NewUser(AbstractBaseUser, PermissionsMixin):
     is_active = BooleanField(default=True)
 
     USERNAME_FIELD = 'username'
-#    REQUIRED_FIELDS = ['username']
-    object = CustomAccountManager()
+    objects = CustomAccountManager()
 
     def __str__(self):
         return self.username

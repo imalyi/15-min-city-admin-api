@@ -1,4 +1,4 @@
-from rest_framework.serializers import Serializer, ModelSerializer, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from gmaps.models import Credential, PlaceType, Status, Coordinate, SubTask, Task
 
 
