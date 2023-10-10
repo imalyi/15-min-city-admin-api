@@ -1,7 +1,7 @@
 from rest_framework.generics import ListCreateAPIView
 
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, StatusSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
-from gmaps.models import Credential, PlaceType, Status, Coordinate, SubTask, Task, RequestData
+from gmaps.models import Credential, PlaceType, Status, Coordinate, SubTask, Task
 
 
 
@@ -32,8 +32,5 @@ class SubTaskView(ListCreateAPIView):
 
 class TaskView(ListCreateAPIView):
     serializer_class = TaskSerializer
-
-    def get_queryset(self):
-        print(self.request.client)
-        return Task.objects.filter(executor=self.request.client.id)
+    queryset = Task.objects.all()
 

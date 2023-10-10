@@ -1,7 +1,24 @@
+from gmaps.models import Coordinate, Credential, SubTask, Task, PlaceType, Status
 from django.contrib import admin
-from django.apps import apps
-app = apps.get_app_config('gmaps')
 
-for model_name, model in app.models.items():
-    admin.site.register(model)
+from django.contrib.auth.admin import UserAdmin
 
+
+class CoordinateConfig(admin.ModelAdmin):
+    list_display = ('name', 'lon', 'lat')
+
+
+class SubTaskConfig(admin.ModelAdmin):
+    list_display = ('place', 'coordinates', 'status', 'start', 'finish', 'created', 'items_collected')
+
+
+class TaskConfig(admin.ModelAdmin):
+    list_display = ('name', 'date', 'credentials', 'subtask_count', 'items_collected', 'is_start', 'is_finish')
+
+
+admin.site.register(Coordinate, CoordinateConfig)
+admin.site.register(SubTask, SubTaskConfig)
+admin.site.register(Task, TaskConfig)
+admin.site.register(PlaceType)
+admin.site.register(Credential)
+admin.site.register(Status)

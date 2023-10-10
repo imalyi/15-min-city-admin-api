@@ -1,16 +1,18 @@
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 
+from django.db.models import Sum
+
 
 class Credential(Model):
     token = CharField(max_length=560)
     name = CharField(max_length=500)
-    request_limit = IntegerField(default=5000) # per day
+    request_limit = IntegerField(default=5000)
 
     def __repr__(self):
-        return f"{self.name}(limit: {self.request_limit})"
+        return self.name
 
     def __str__(self):
-        return f"{self.name}(limit: {self.request_limit})"
+        return self.name
 
 
 class PlaceType(Model):
@@ -62,30 +64,42 @@ class SubTask(Model):
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
     coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
     status = ForeignKey(Status, on_delete=DO_NOTHING)
-    start = DateTimeField()  # make null true
-    finish = DateTimeField()  # make null true
+    start = DateTimeField(null=True, default=None, blank=True)
+    finish = DateTimeField(null=True, default=None, blank=True)
     created = DateTimeField(auto_now=True)
+    items_collected = IntegerField(default=0) # received items on task(amount of api keys)
 
     def __str__(self):
-        return f"{self.place}, {self.coordinates}, {self.coordinates}, {self.start} - {self.finish}"
+        return str(self.start)
 
     def __repr__(self):
-        return f"{self.place}, {self.coordinates}, {self.coordinates}, {self.start} - {self.finish}"
-
-
-class RequestData(Model):
-    """ Store info about amount of request to api"""
-    key = ForeignKey(Credential, on_delete=DO_NOTHING)
-    count = IntegerField(default=0)
-    time = DateTimeField(auto_now=True)
+        return str(self.start)
 
 
 class Task(Model):
     name = CharField(max_length=250)
-
     sub_task = ManyToManyField(SubTask)
     date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
 
+    @property
+    def subtask_count(self):
+        return self.sub_task.count()
+
+    @property
+    def items_collected(self):
+        return self.sub_task.aggregate(Sum('items_collected'))['items_collected__sum']
+
+    @property
+    def is_start(self):
+        return self.sub_task.filter('start')
+
+    @property
+    def is_start(self):
+        return self.sub_task.filter(start__isnull=False).exists()
+
+    @property
+    def is_finish(self):
+        return self.sub_task.filter(finish__isnull=False).exists()
     def __repr__(self):
-        return f"{self.client} - {self.date} - {self.credentials}"
+        return self.name
