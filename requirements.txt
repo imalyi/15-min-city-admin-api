@@ -6,3 +6,5 @@ sqlparse==0.4.4
 typing-extensions==4.8.0
 djangorestframework-api-key
 drf-yasg
+djangorestframework-simplejwt
+pika

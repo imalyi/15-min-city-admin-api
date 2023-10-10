@@ -1,4 +1,4 @@
-from gmaps.models import Coordinate, Credential, SubTask, Task, PlaceType, Status
+from gmaps.models import Coordinate, Credential, SubTask, Task, PlaceType
 from django.contrib import admin
 
 from django.contrib.auth.admin import UserAdmin
@@ -21,4 +21,3 @@ admin.site.register(SubTask, SubTaskConfig)
 admin.site.register(Task, TaskConfig)
 admin.site.register(PlaceType)
 admin.site.register(Credential)
-admin.site.register(Status)

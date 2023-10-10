@@ -1,13 +1,19 @@
-from django.contrib import admin
 from django.urls import path
+from gmaps.views import CredentialView, PlaceTypeView, CoordinatesView, SubTaskView, TaskView, SubTaskActionView
+from rest_framework import routers
 
-from gmaps.views import CredentialView, PlaceTypeView, StatusView, CoordinatesView, SubTaskView, TaskView
+
+router = routers.SimpleRouter()
+router.register(r'subtask', SubTaskActionView)
+
 
 urlpatterns = [
     path('credential/', CredentialView.as_view()),
-    path('status/', StatusView.as_view()),
     path('coordinates/', CoordinatesView.as_view()),
     path('subtask/', SubTaskView.as_view()),
+    path('subtask/<int:pk>/error/', SubTaskView.as_view()),
+    path('subtask/<int:pk>/done/', SubTaskView.as_view()),
+    path('subtask/<int:pk>/running/', SubTaskView.as_view()),
     path('task/', TaskView.as_view()),
-    path('place/', PlaceTypeView.as_view())
-]
+    path('place/', PlaceTypeView.as_view()),
+] + router.urls
