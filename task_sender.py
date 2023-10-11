@@ -9,7 +9,7 @@ class TaskSender:
         pass
 
     def __init__(self):
-        self.credentials = pika.credentials.PlainCredentials(username='igor', password='343877')
+        self.credentials = pika.PlainCredentials(username='igor', password='343877')
         self.__connect()
 
     def __connect(self):
@@ -17,14 +17,14 @@ class TaskSender:
             self.connection = pika.BlockingConnection(
                 pika.ConnectionParameters(host='localhost', port=5672, credentials=self.credentials))
             self.channel = self.connection.channel()
-        except pika.exceptions.AMQPConnectionError:
-            raise self.BrokerConnectionError("Cant connect to broker")
+        except pika.exceptions.AMQPConnectionError as e:
+            raise self.BrokerConnectionError(f"Can't connect to broker: {e}")
 
     def __create_queue(self):
         try:
             self.channel.queue_declare(queue='gmaps', durable=True)
-        except Exception:
-            raise self.BrokerMessageError("Cant connect to channel")
+        except pika.exceptions.ChannelError as e:
+            raise self.BrokerMessageError(f"Can't create queue: {e}")
 
     def send(self, task: str) -> bool:
         try:
@@ -37,11 +37,16 @@ class TaskSender:
                     delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
                 ))
             return True
-        except pika.exception.BodyTooLong:
+        except pika.exceptions.BodyTooLong:
             raise self.BrokerMessageError("Data length too long")
+        except pika.exceptions.AMQPError as e:
+            raise self.BrokerMessageError(f"Error while sending message: {e}")
 
     def __del__(self):
         try:
             self.connection.close()
         except AttributeError:
             pass
+
+t = TaskSender()
+t.send('asfsaf')

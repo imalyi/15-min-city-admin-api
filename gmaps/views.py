@@ -38,6 +38,16 @@ class TaskActionView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
 
+    @action(detail=True, methods=['get'])
+    def start(self, request, pk=None):
+        task = self.get_object()
+        if task.status == WAITING:
+            task_sender = TaskSender()
+            task_json = JSONRenderer().render(TaskSerializer(task).data)
+            task_sender.send(task_json)
+            return Response({'detail': f"Task {task} added to queue"})
+        return Response({'detail': f"Task {task} has status {task.status}"})
+
 
 def handle_subtask_action(view_func):
     @functools.wraps(view_func)
