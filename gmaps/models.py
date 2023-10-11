@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 from django.db.models import Sum, Manager
@@ -11,6 +11,7 @@ RUNNING = 'running'
 ERROR = 'error'
 STOPPED = 'stopped'
 CANCELED = 'canceled'
+
 
 
 
@@ -49,6 +50,15 @@ class Coordinate(Model):
 
 
 class SubTask(Model):
+    class InvalidStatusChange(Exception):
+        pass
+
+    class InvalidStatusForProgressTrack(Exception):
+        pass
+
+    class InvalidProgressValue(Exception):
+        pass
+
 
     STATUS = (
         (WAITING, 'waiting'),
@@ -67,7 +77,6 @@ class SubTask(Model):
     created = DateTimeField(auto_now=True)
     items_collected = IntegerField(default=0) # received items on task(count of api tokens used)
 
-    #TODO: add constraint: if finished, then status cant be waiting, stopped or error. if
     def __str__(self):
         return str(self.start)
 
@@ -79,18 +88,24 @@ class SubTask(Model):
             self.status = ERROR
             self.finish = datetime.now()
             self.save()
+        else:
+            raise self.InvalidStatusChange(f"Cant change status to {ERROR} for task with status {self.status}")
 
     def change_status_to_done(self):
         if self.status == RUNNING:
             self.status = DONE
             self.finish = datetime.now()
             self.save()
+        else:
+            raise self.InvalidStatusChange(f"Cant change status to {DONE} for task with status {self.status}")
 
     def start_if_waiting(self):
         if self.status == WAITING and not self.finish:
             self.status = RUNNING
             self.start = datetime.now()
             self.save()
+        else:
+            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status}")
 
     def update_progress(self, progress):
         if self.status == RUNNING:
@@ -98,7 +113,17 @@ class SubTask(Model):
                 self.items_collected += int(progress)
                 self.save()
             except ValueError:
-                pass  # Handle the error or log it here if necessary
+                raise self.InvalidProgressValue(f"{progress} cant be converted to int")
+        else:
+            raise self.InvalidStatusForProgressTrack(f"Cant increment progress for status {self.status}")
+
+    def cancel_if_waiting(self):
+        if self.status == WAITING and not self.start:
+            self.status = CANCELED
+            self.finish = datetime.now()
+            self.save()
+        else:
+            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status}")
 
 
 class Task(Model):
@@ -116,6 +141,7 @@ class Task(Model):
     date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
     status = CharField(choices=STATUS, default=WAITING, max_length=20)
+
     @property
     def subtask_count(self):
         return self.sub_task.count()
