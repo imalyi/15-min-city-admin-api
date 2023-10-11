@@ -31,15 +31,6 @@ class SubTaskSerializer(ModelSerializer):
         model = SubTask
         fields = "__all__"
 
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-        if instance.status == DONE:
-            instance.finish = datetime.datetime.now()
-        if instance.status == RUNNING:
-            instance.start = datetime.datetime.now()
-
-        instance.save()
-        return instance
 
 class TaskSerializer(ModelSerializer):
     sub_task = SubTaskSerializer(many=True)

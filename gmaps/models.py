@@ -78,11 +78,13 @@ class SubTask(Model):
     items_collected = IntegerField(default=0) # received items on task(count of api tokens used)
 
     def __str__(self):
-        return str(self.start)
+        return f"{self.place}-{str(self.created)}"
 
     def __repr__(self):
-        return str(self.start)
+        return  f"{self.place}-{str(self.created)}"
 
+
+    #TODO rewrite this
     def change_status_to_error(self):
         if self.status == RUNNING:
             self.status = ERROR
@@ -100,30 +102,31 @@ class SubTask(Model):
             raise self.InvalidStatusChange(f"Cant change status to {DONE} for task with status {self.status}")
 
     def start_if_waiting(self):
-        if self.status == WAITING and not self.finish:
+        if self.status == WAITING:
             self.status = RUNNING
             self.start = datetime.now()
             self.save()
         else:
-            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status}")
+            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status} and finish data {self.finish}")
 
     def update_progress(self, progress):
+        try:
+            progress = int(progress)
+        except ValueError:
+            raise self.InvalidProgressValue(f"{progress} cant be converted to int")
         if self.status == RUNNING:
-            try:
-                self.items_collected += int(progress)
-                self.save()
-            except ValueError:
-                raise self.InvalidProgressValue(f"{progress} cant be converted to int")
+            self.items_collected += int(progress)
+            self.save()
         else:
             raise self.InvalidStatusForProgressTrack(f"Cant increment progress for status {self.status}")
 
     def cancel_if_waiting(self):
-        if self.status == WAITING and not self.start:
+        if self.status == WAITING:
             self.status = CANCELED
             self.finish = datetime.now()
             self.save()
         else:
-            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status}")
+            raise self.InvalidStatusChange(f"Cant change status to {CANCELED} for task with status {self.status}")
 
 
 class Task(Model):
