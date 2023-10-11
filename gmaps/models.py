@@ -74,6 +74,31 @@ class SubTask(Model):
     def __repr__(self):
         return str(self.start)
 
+    def change_status_to_error(self):
+        if self.status == RUNNING:
+            self.status = ERROR
+            self.finish = datetime.now()
+            self.save()
+
+    def change_status_to_done(self):
+        if self.status == RUNNING:
+            self.status = DONE
+            self.finish = datetime.now()
+            self.save()
+
+    def start_if_waiting(self):
+        if self.status == WAITING and not self.finish:
+            self.status = RUNNING
+            self.start = datetime.now()
+            self.save()
+
+    def update_progress(self, progress):
+        if self.status == RUNNING:
+            try:
+                self.items_collected += int(progress)
+                self.save()
+            except ValueError:
+                pass  # Handle the error or log it here if necessary
 
 
 class Task(Model):

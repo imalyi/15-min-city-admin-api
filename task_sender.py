@@ -16,6 +16,7 @@ class TaskSender:
         self.channel.queue_declare(queue='gmaps', durable=True)
 
     def send(self, task: str) -> bool:
+        #TODO error handling
         self.__create_queue()
         self.channel.basic_publish(
             exchange='',

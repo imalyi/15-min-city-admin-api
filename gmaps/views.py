@@ -52,48 +52,29 @@ class SubTaskActionView(viewsets.ModelViewSet):
     serializer_class = SubTaskSerializer
     queryset = SubTask.objects.all()
 
-    #TODO rewrite this
     @action(detail=True, methods=['get'])
     def error(self, request, pk=None):
         subtask = self.get_object()
-        if subtask.status in [RUNNING]:
-            subtask.status = ERROR
-            subtask.finish = datetime.datetime.now()
-            subtask.save()
-            return Response({'detail': 'ok'})
-        return Response({'detail': f"Subtask is not running"})
+        subtask.change_status_to_error()
+        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     def done(self, request, pk=None):
         subtask = self.get_object()
-        if subtask.status == RUNNING:
-            subtask.status = DONE
-            subtask.finish = datetime.datetime.now()
-            subtask.save()
+        subtask.change_status_to_done()
         return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     def start(self, request, pk=None):
         subtask = self.get_object()
-        if subtask.status in [WAITING] and not subtask.finish:
-            subtask.status = RUNNING
-            subtask.start = datetime.datetime.now()
-            subtask.save()
-            return Response({'detail': 'ok'})
-        return Response({'detail': f"Subtask is not waiting"})
+        subtask.start_if_waiting()
+        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['post'])
-    def track(self, request, pk= None):
+    def track(self, request, pk=None):
         subtask = self.get_object()
-        if subtask.status == RUNNING:
-            try:
-                subtask.items_collected += int(request.data.get('progress', 0))
-                subtask.save()
-            except ValueError:
-                return Response({'detail': 'progress must be int'})
-
-            return Response({'detail': 'ok'})
-        return Response({'detail': f"cant increment progress on {subtask.status} subtask"})
+        subtask.update_progress(request.data.get('progress', 0))
+        return Response({'detail': 'ok'})
 
 
 class TaskView(ListCreateAPIView):
