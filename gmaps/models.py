@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
-from django.db.models import Sum, Manager
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
+from django.db.models import Sum
 
 WAITING = 'waiting'
 DONE = 'done'
@@ -12,7 +10,32 @@ ERROR = 'error'
 STOPPED = 'stopped'
 CANCELED = 'canceled'
 
+POSSIBLE_STATUSES = {
+    WAITING: [RUNNING, CANCELED],
+    RUNNING: [ERROR, STOPPED, DONE],
+    DONE: [],
+    ERROR: [],
+    STOPPED: [],
+    CANCELED: []
+}
 
+IS_FINISH_DATE_UPDATE_REQUIRED = {
+    WAITING: False,
+    RUNNING: False,
+    DONE: True,
+    ERROR: True,
+    STOPPED: True,
+    CANCELED: True
+}
+
+IS_START_DATE_UPDATE_REQUIRED = {
+    WAITING: False,
+    RUNNING: True,
+    DONE: False,
+    ERROR: False,
+    STOPPED: False,
+    CANCELED: False
+}
 
 
 class Credential(Model):
@@ -48,7 +71,6 @@ class Coordinate(Model):
     def __repr__(self):
         return self.name
 
-
 class SubTask(Model):
     class InvalidStatusChange(Exception):
         pass
@@ -81,33 +103,18 @@ class SubTask(Model):
         return f"{self.place}-{str(self.created)}"
 
     def __repr__(self):
-        return  f"{self.place}-{str(self.created)}"
+        return f"{self.place}-{str(self.created)}"
 
-
-    #TODO rewrite this
-    def change_status_to_error(self):
-        if self.status == RUNNING:
-            self.status = ERROR
-            self.finish = datetime.now()
-            self.save()
+    def change_status(self, target_status):
+        if target_status in POSSIBLE_STATUSES.get(self.status):
+            self.status = target_status
         else:
-            raise self.InvalidStatusChange(f"Cant change status to {ERROR} for task with status {self.status}")
-
-    def change_status_to_done(self):
-        if self.status == RUNNING:
-            self.status = DONE
+            raise self.InvalidStatusChange(f"Cant change status to {target_status} for task with status {self.status}, start: {self.start}, finish: {self.finish}")
+        if target_status in IS_FINISH_DATE_UPDATE_REQUIRED:
             self.finish = datetime.now()
-            self.save()
-        else:
-            raise self.InvalidStatusChange(f"Cant change status to {DONE} for task with status {self.status}")
-
-    def start_if_waiting(self):
-        if self.status == WAITING:
-            self.status = RUNNING
+        if target_status in IS_START_DATE_UPDATE_REQUIRED:
             self.start = datetime.now()
-            self.save()
-        else:
-            raise self.InvalidStatusChange(f"Cant change status to {RUNNING} for task with status {self.status} and finish data {self.finish}")
+        self.save()
 
     def update_progress(self, progress):
         try:
@@ -119,14 +126,6 @@ class SubTask(Model):
             self.save()
         else:
             raise self.InvalidStatusForProgressTrack(f"Cant increment progress for status {self.status}")
-
-    def cancel_if_waiting(self):
-        if self.status == WAITING:
-            self.status = CANCELED
-            self.finish = datetime.now()
-            self.save()
-        else:
-            raise self.InvalidStatusChange(f"Cant change status to {CANCELED} for task with status {self.status}")
 
 
 class Task(Model):

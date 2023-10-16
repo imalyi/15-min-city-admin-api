@@ -47,6 +47,3 @@ class TaskSender:
             self.connection.close()
         except AttributeError:
             pass
-
-t = TaskSender()
-t.send('asfsaf')

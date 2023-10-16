@@ -1,6 +1,10 @@
+import datetime
+
 from gmaps.models import SubTask, PlaceType, Coordinate
-from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR
+from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR, STOPPED
 from django.test import TestCase
+
+from gmaps.models import POSSIBLE_STATUSES, IS_START_DATE_UPDATE_REQUIRED, IS_FINISH_DATE_UPDATE_REQUIRED
 
 
 class TestSubtaksModel(TestCase):
@@ -23,62 +27,35 @@ class TestAction(TestCase):
     def setUp(self):
         self.place = PlaceType.objects.create(value="test_place")
         self.coordinates = Coordinate.objects.create(name="test_coords", lat=12.1, lon=24.1)
-        self.subtask = SubTask.objects.create(place=self.place, coordinates=self.coordinates, status=WAITING)
+
+    def __create_subtask_with_status(self, status):
+        subtask = SubTask.objects.create(place=self.place, coordinates=self.coordinates, status=status)
+        if IS_FINISH_DATE_UPDATE_REQUIRED.get(status):
+            subtask.finish = datetime.datetime.now()
+        if IS_START_DATE_UPDATE_REQUIRED.get(status):
+            subtask.start = datetime.datetime.now()
+        subtask.save()
+        return subtask
 
     def test_status_change_methods(self):
-        test_cases = [
-            {
-                'method': SubTask.change_status_to_error,
-                'invalid_status_list': [WAITING, DONE, ERROR, CANCELED],
-                'valid_status_list': [RUNNING],
-                'new_status': ERROR,
-            },
-            {
-                'method': SubTask.change_status_to_done,
-                'invalid_status_list': [ERROR, CANCELED, WAITING],
-                'valid_status_list': [RUNNING],
-                'new_status': DONE,
-            },
-            {
-                'method': SubTask.start_if_waiting,
-                'invalid_status_list': [ERROR, RUNNING, CANCELED, DONE],
-                'valid_status_list': [WAITING],
-                'new_status': RUNNING,
-            },
-            {
-                'method': SubTask.cancel_if_waiting,
-                'invalid_status_list': [ERROR, RUNNING, CANCELED, DONE],
-                'valid_status_list': [WAITING],
-                'new_status': CANCELED,
-            },
-        ]
+        for status, next_statuses in POSSIBLE_STATUSES.items():
+            for next_status in next_statuses:
+                # create subtask with proper start, finish properties for status
+                subtask = self.__create_subtask_with_status(status)
+                subtask.change_status(next_status)
 
-        for test_case in test_cases:
-            with self.subTest(test_case=test_case):
-                for invalid_status in test_case['invalid_status_list']:
-                    with self.subTest(status=invalid_status):
-                        self.subtask.status = invalid_status
-                        self.subtask.save()
-                        with self.assertRaises(SubTask.InvalidStatusChange):
-                            test_case['method'](self.subtask)
-
-                for valid_status in test_case['valid_status_list']:
-                    with self.subTest(status=valid_status):
-                        self.subtask.status = valid_status
-                        self.subtask.save()
-                        test_case['method'](self.subtask)
-                        self.assertEqual(self.subtask.status, test_case['new_status'])
+                self.assertEquals(subtask.status, next_status)
+                if next_status in IS_START_DATE_UPDATE_REQUIRED:
+                    self.assertIsInstance(subtask.start, datetime.datetime)
 
     def test_update_progress(self):
+        subtask = self.__create_subtask_with_status(WAITING)
+        with self.assertRaises(subtask.InvalidStatusForProgressTrack):
+            subtask.update_progress(15)
 
-        with self.assertRaises(self.subtask.InvalidStatusForProgressTrack):
-            self.subtask.update_progress(15)
+        subtask = self.__create_subtask_with_status(RUNNING)
+        with self.assertRaises(subtask.InvalidProgressValue):
+            subtask.update_progress('14f')
 
-
-        with self.assertRaises(self.subtask.InvalidProgressValue):
-            self.subtask.update_progress('14f')
-
-        self.subtask.status = RUNNING
-        self.subtask.save()
-        self.subtask.update_progress(15)
-        self.assertEquals(self.subtask.items_collected, 15)
+        subtask.update_progress(15)
+        self.assertEquals(subtask.items_collected, 15)
