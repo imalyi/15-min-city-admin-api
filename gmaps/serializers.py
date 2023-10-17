@@ -37,8 +37,12 @@ class TaskSerializer(ModelSerializer):
     credentials = CredentialSerializer()
     subtask_count = SerializerMethodField()
     items_collected = SerializerMethodField()
-    is_start = SerializerMethodField()
-    is_finish = SerializerMethodField()
+    waiting_subtask_count = SerializerMethodField()
+    running_subtask_count = SerializerMethodField()
+    done_subtask_count = SerializerMethodField()
+    canceled_subtask_count = SerializerMethodField()
+    stopped_subtask_count = SerializerMethodField()
+    error_subtask_count = SerializerMethodField()
 
     class Meta:
         model = Task
@@ -49,10 +53,3 @@ class TaskSerializer(ModelSerializer):
 
     def get_items_collected(self, obj):
         return obj.items_collected
-
-    def get_is_start(self, obj):
-        return obj.is_start
-
-    def get_is_finish(self, obj):
-        return obj.is_finish
-

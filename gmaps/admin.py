@@ -13,7 +13,7 @@ class SubTaskConfig(admin.ModelAdmin):
 
 
 class TaskConfig(admin.ModelAdmin):
-    list_display = ('name', 'date', 'credentials', 'subtask_count', 'items_collected', 'is_start', 'is_finish')
+    list_display = ('name', 'date', 'credentials', 'subtask_count', 'items_collected')
 
 
 admin.site.register(Coordinate, CoordinateConfig)

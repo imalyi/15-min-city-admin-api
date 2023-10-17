@@ -71,6 +71,7 @@ class Coordinate(Model):
     def __repr__(self):
         return self.name
 
+
 class SubTask(Model):
     class InvalidStatusChange(Exception):
         pass
@@ -80,7 +81,6 @@ class SubTask(Model):
 
     class InvalidProgressValue(Exception):
         pass
-
 
     STATUS = (
         (WAITING, 'waiting'),
@@ -116,6 +116,21 @@ class SubTask(Model):
             self.start = datetime.now()
         self.save()
 
+    def change_status_to_stopped(self):
+        self.change_status(STOPPED)
+
+    def change_status_to_error(self):
+        self.change_status(ERROR)
+
+    def change_status_to_running(self):
+        self.change_status(RUNNING)
+
+    def change_status_to_done(self):
+        self.change_status(DONE)
+
+    def change_status_to_canceled(self):
+        self.change_status(CANCELED)
+
     def update_progress(self, progress):
         try:
             progress = int(progress)
@@ -142,7 +157,21 @@ class Task(Model):
     sub_task = ManyToManyField(SubTask)
     date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
-    status = CharField(choices=STATUS, default=WAITING, max_length=20)
+
+    def start(self):
+        for subtask in self.sub_task.filter(status=WAITING):
+            subtask.status = RUNNING
+            subtask.save()
+
+    def cancel(self):
+        for subtask in self.sub_task.filter(status=WAITING):
+            subtask.status = CANCELED
+            subtask.save()
+
+    def stop(self):
+        for subtask in self.sub_task.filter(status=RUNNING):
+            subtask.status = STOPPED
+            subtask.save()
 
     @property
     def subtask_count(self):
@@ -151,18 +180,30 @@ class Task(Model):
     @property
     def items_collected(self):
         return self.sub_task.aggregate(Sum('items_collected'))['items_collected__sum']
-    #TODO: change on start_date, finish_date, which can be Null if not started and not finished
-    @property
-    def is_start(self):
-        return self.sub_task.filter('start')
 
     @property
-    def is_start(self):
-        return self.sub_task.filter(start__isnull=False).exists()
+    def waiting_subtask_count(self):
+        return self.sub_task.filter(status=WAITING).count()
 
     @property
-    def is_finish(self):
-        return self.sub_task.filter(finish__isnull=False).exists()
+    def running_subtask_count(self):
+        return self.sub_task.filter(status=RUNNING).count()
+
+    @property
+    def done_subtask_count(self):
+        return self.sub_task.filter(status=DONE).count()
+
+    @property
+    def canceled_subtask_count(self):
+        return self.sub_task.filter(status=CANCELED).count()
+
+    @property
+    def stopped_subtask_count(self):
+        return self.sub_task.filter(status=STOPPED).count()
+
+    @property
+    def error_subtask_count(self):
+        return self.sub_task.filter(status=ERROR).count()
 
     def __repr__(self):
         return self.name

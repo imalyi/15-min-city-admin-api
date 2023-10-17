@@ -1,5 +1,3 @@
-import datetime
-from django.core import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, CreateAPIView, UpdateAPIView
@@ -34,19 +32,43 @@ class SubTaskView(ListCreateAPIView):
     queryset = SubTask.objects.all()
 
 
+
+def handle_task_action(view_func):
+    @functools.wraps(view_func)
+    def wrapper(self, request, pk=None):
+        task = self.get_object()
+        try:
+            return view_func(self, task, request, pk)
+        except Exception as err:
+            print(err)
+    return wrapper
+
+
 class TaskActionView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
 
     @action(detail=True, methods=['get'])
-    def start(self, request, pk=None):
-        task = self.get_object()
-        if task.status == WAITING:
-            task_sender = TaskSender()
-            task_json = JSONRenderer().render(TaskSerializer(task).data)
-            task_sender.send(task_json)
-            return Response({'detail': f"Task {task} added to queue"})
-        return Response({'detail': f"Task {task} has status {task.status}"})
+    @handle_task_action
+    def start(self, task, request, pk=None):
+        """Send all subtask to execution and set status"""
+        task.start()
+        task_sender = TaskSender()
+        task_json = JSONRenderer().render(TaskSerializer(task).data)
+        task_sender.send(task_json)
+        return Response({'detail': f"Task {task} added to queue"})
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
+    def cancel(self, task, request, pk=None):
+        """Cancel all subtask with status WAITING"""
+        task.cancel()
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
+    def stop(self, task, request, pk=None):
+        """Stop all subtask with status RUNNING"""
+        task.stop()
 
 
 def handle_subtask_action(view_func):
@@ -55,7 +77,7 @@ def handle_subtask_action(view_func):
         subtask = self.get_object()
         try:
             return view_func(self, subtask, request, pk)
-        except (SubTask.InvalidStatusChange,SubTask.InvalidProgressValue) as e:
+        except (SubTask.InvalidStatusChange, SubTask.InvalidProgressValue) as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return wrapper
 
@@ -79,13 +101,19 @@ class SubTaskActionView(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def start(self, subtask, request, pk=None):
-        subtask.start_if_waiting()
+        subtask.change_status_to_running()
         return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def cancel(self, subtask, request, pk=None):
-        subtask.cancel_if_waiting()
+        subtask.change_status_to_canceled()
+        return Response({'detail': 'ok'})
+
+    @action(detail=True, methods=['get'])
+    @handle_subtask_action
+    def stop(self, subtask, request, pk=None):
+        subtask.change_status_to_stopped()
         return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['post'])

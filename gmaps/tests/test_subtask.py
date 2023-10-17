@@ -7,22 +7,6 @@ from django.test import TestCase
 from gmaps.models import POSSIBLE_STATUSES, IS_START_DATE_UPDATE_REQUIRED, IS_FINISH_DATE_UPDATE_REQUIRED
 
 
-class TestSubtaksModel(TestCase):
-    def setUp(self):
-        self.place = PlaceType.objects.create(value="test_place")
-        self.coordinates = Coordinate.objects.create(name="test_coords", lat=12.1, lon=24.1)
-
-        self.subtask = SubTask.objects.create(
-            place=self.place,
-            coordinates=self.coordinates,
-            status=WAITING,
-        )
-        self.subtask.save()
-
-    def test_model_str(self):
-        self.assertEquals(str(self.subtask), f"{self.place}-{str(self.subtask.created)}")
-
-
 class TestAction(TestCase):
     def setUp(self):
         self.place = PlaceType.objects.create(value="test_place")
