@@ -52,7 +52,6 @@ class TaskActionView(viewsets.ModelViewSet):
     @handle_task_action
     def start(self, task, request, pk=None):
         """Send all subtask to execution and set status"""
-        task.start()
         task_sender = TaskSender()
         task_json = JSONRenderer().render(TaskSerializer(task).data)
         task_sender.send(task_json)
@@ -63,12 +62,14 @@ class TaskActionView(viewsets.ModelViewSet):
     def cancel(self, task, request, pk=None):
         """Cancel all subtask with status WAITING"""
         task.cancel()
+        return Response({'detail': f"Task {task} canceled"})
 
     @action(detail=True, methods=['get'])
     @handle_task_action
     def stop(self, task, request, pk=None):
         """Stop all subtask with status RUNNING"""
         task.stop()
+        return Response({'detail': f"Task {task} stopped"})
 
 
 def handle_subtask_action(view_func):

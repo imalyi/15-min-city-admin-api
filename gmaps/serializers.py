@@ -53,3 +53,21 @@ class TaskSerializer(ModelSerializer):
 
     def get_items_collected(self, obj):
         return obj.items_collected
+
+    def get_waiting_subtask_count(self, obj):
+        return obj.waiting_subtask_count
+
+    def get_running_subtask_count(self, obj):
+        return obj.running_subtask_count
+
+    def get_done_subtask_count(self, obj):
+        return obj.done_subtask_count
+
+    def get_canceled_subtask_count(self, obj):
+        return obj.canceled_subtask_count
+
+    def get_stopped_subtask_count(self, obj):
+        return obj.stopped_subtask_count
+
+    def get_error_subtask_count(self, obj):
+        return obj.error_subtask_count

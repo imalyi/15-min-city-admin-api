@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-k54%^qt^54h&oj7b55)hmby6z%hrjd*@a15fbsy5x@d%ipf*nj'
@@ -57,16 +58,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'google_maps_parser_api.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('API_DB_NAME'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('API_DB_NAME', 'google_maps_parser_api'),
+            'USER': os.environ.get('API_DB_USER', 'root'),
+            'PASSWORD': os.environ.get('API_DB_PASSWORD', 'admin'),
+            'HOST': os.environ.get('API_DB_HOST', 'localhost'),
+            'PORT': os.environ.get('API_DB_PORT', 3306),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'db',
 
+        }
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -139,4 +150,9 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
-APPEND_SLASH=False
+APPEND_SLASH = True
+
+PIKA_USERNAME = os.environ.get('RABBITMQ_USER') or 'django_api'
+PIKA_PASSWORD = os.environ.get('RABBITMQ_PASS') or 'django_api'
+PIKA_HOST = os.environ.get('RABBITMQ_HOST') or 'rabbitmq'
+PIKA_PORT = os.environ.get('RABBITMQ_PORT') or 5672

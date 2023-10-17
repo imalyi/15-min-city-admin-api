@@ -4,8 +4,41 @@ services:
         container_name: "rabbitmq"
         image: rabbitmq:3.8-management-alpine
         environment:
-            - RABBITMQ_DEFAULT_USER=igor
+            - RABBITMQ_DEFAULT_USER=django_api
             - RABBITMQ_DEFAULT_PASS=343877
         ports:
             - '5672:5672'
             - '15672:15672'
+
+    admin_api:
+        container_name: "admin_api"
+        image: malyyigor34/gmaps_api_parser:1.0
+        ports:
+            - "8111:8000"
+        environment:
+            - PIKA_USERNAME=django_api
+            - PIKA_PASSWORD=343877
+            - PIKA_HOST=rabbitmq
+            - PIKA_PORT=5672
+
+#TODO add credentials for db
+#TODO add depends_on
+#TODO communtication with pika dont work
+#TODO jenkins pipeline
+#TODO tests for django api views
+
+    db:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'db'
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+        ports:
+            - '3306:3306'
+        volumes:
+            - my-db:/var/lib/mysql
+
+volumes:
+  my-db:

@@ -1,4 +1,5 @@
 import pika
+from google_maps_parser_api.settings import PIKA_USERNAME, PIKA_PASSWORD, PIKA_HOST, PIKA_PORT
 
 
 class TaskSender:
@@ -9,13 +10,13 @@ class TaskSender:
         pass
 
     def __init__(self):
-        self.credentials = pika.PlainCredentials(username='igor', password='343877')
+        self.credentials = pika.PlainCredentials(username=PIKA_USERNAME, password=PIKA_PASSWORD)
         self.__connect()
 
     def __connect(self):
         try:
             self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host='localhost', port=5672, credentials=self.credentials))
+                pika.ConnectionParameters(host=PIKA_HOST, port=PIKA_PORT, credentials=self.credentials))
             self.channel = self.connection.channel()
         except pika.exceptions.AMQPConnectionError as e:
             raise self.BrokerConnectionError(f"Can't connect to broker: {e}")
