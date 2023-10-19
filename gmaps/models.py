@@ -1,5 +1,5 @@
-from datetime import datetime
 
+from datetime import datetime
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 from django.db.models import Sum
 
@@ -97,7 +97,15 @@ class SubTask(Model):
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
     created = DateTimeField(auto_now=True)
-    items_collected = IntegerField(default=0) # received items on task(count of api tokens used)
+    items_collected = IntegerField(default=0)
+
+    @property
+    def credentials(self):
+        subtask = self.subtask.first()
+        if subtask:
+            return subtask.credentials.token
+        else:
+            return None
 
     def __str__(self):
         return f"{self.place}-{str(self.created)}"
@@ -154,7 +162,7 @@ class Task(Model):
     )
 
     name = CharField(max_length=250)
-    sub_task = ManyToManyField(SubTask)
+    sub_task = ManyToManyField(SubTask, related_name='subtask')
     date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
 

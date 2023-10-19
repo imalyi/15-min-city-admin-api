@@ -26,6 +26,10 @@ class CoordinateSerializer(ModelSerializer):
 class SubTaskSerializer(ModelSerializer):
     coordinates = CoordinateSerializer()
     place = PlaceTypeSerializer()
+    credentials = SerializerMethodField()
+
+    def get_credentials(self, obj):
+        return obj.credentials
 
     class Meta:
         model = SubTask
