@@ -158,4 +158,4 @@ PIKA_HOST = os.environ.get('PIKA_HOST') or 'rabbitmq'
 PIKA_PORT = os.environ.get('PIKA_PORT') or 5672
 
 
-CSRF_TRUSTED_ORIGINS=['15minadmin.1213213.xyz']
+CSRF_TRUSTED_ORIGINS=['https://15minadmin.1213213.xyz']
