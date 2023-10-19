@@ -50,11 +50,9 @@ class TaskActionView(viewsets.ModelViewSet):
     @handle_task_action
     def start(self, task, request, pk=None):
         """Send all tasks to execution"""
-#        task_sender = TaskSender()
-
+        task_sender = TaskSender()
         task_json = JSONRenderer().render(TaskSerializer(task).data)
-        print(task_json)
-     #   task_sender.send(task_json)
+        task_sender.send(task_json)
         return Response({'detail': f"Task {task} added to queue"})
 
     @action(detail=True, methods=['get'])
