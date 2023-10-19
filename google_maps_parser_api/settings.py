@@ -152,7 +152,10 @@ SIMPLE_JWT = {
 
 APPEND_SLASH = True
 
-PIKA_USERNAME = os.environ.get('RABBITMQ_USER') or 'django_api'
-PIKA_PASSWORD = os.environ.get('RABBITMQ_PASS') or 'django_api'
-PIKA_HOST = os.environ.get('RABBITMQ_HOST') or 'rabbitmq'
-PIKA_PORT = os.environ.get('RABBITMQ_PORT') or 5672
+PIKA_USERNAME = os.environ.get('PIKA_USERNAME') or 'django_api'
+PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD') or 'django_api'
+PIKA_HOST = os.environ.get('PIKA_HOST') or 'rabbitmq'
+PIKA_PORT = os.environ.get('PIKA_PORT') or 5672
+
+
+CSRF_TRUSTED_ORIGINS=['15minadmin.1213213.xyz']

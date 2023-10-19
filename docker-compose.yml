@@ -1,6 +1,6 @@
 version: "3.3"
 services:
-    rabbitmq3:
+    rabbitmq:
         container_name: "rabbitmq"
         image: rabbitmq:3.8-management-alpine
         environment:
@@ -12,7 +12,8 @@ services:
 
     admin_api:
         container_name: "admin_api"
-        image: malyyigor34/gmaps_api_parser:1.0
+        #image: malyyigor34/gmaps_api_parser:1.0
+        build: .
         ports:
             - "8111:8000"
         environment:
@@ -20,12 +21,12 @@ services:
             - PIKA_PASSWORD=343877
             - PIKA_HOST=rabbitmq
             - PIKA_PORT=5672
+        depends_on:
+            db:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
 
-#TODO add credentials for db
-#TODO add depends_on
-#TODO communtication with pika dont work
-#TODO jenkins pipeline
-#TODO tests for django api views
 
     db:
         image: mysql:5.7
@@ -42,3 +43,7 @@ services:
 
 volumes:
   my-db:
+
+#TODO jenkins pipeline
+#TODO tests for django api views
+#TODO django logs

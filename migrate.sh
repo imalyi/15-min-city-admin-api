@@ -21,4 +21,5 @@ DJANGO_SUPERUSER_PASSWORD=343877 \
 python3 manage.py createsuperuser --noinput
 
 python3 manage.py test
+coverage run manage.py test
 python3 manage.py runserver 0.0.0.0:8000

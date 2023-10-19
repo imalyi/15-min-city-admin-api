@@ -1,12 +1,11 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, CreateAPIView, UpdateAPIView
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets
 from task_sender import TaskSender
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
-from gmaps.models import ERROR, WAITING, RUNNING, STOPPED, DONE, CANCELED
 from rest_framework import status
 
 import functools
@@ -30,7 +29,6 @@ class CoordinatesView(ListCreateAPIView):
 class SubTaskView(ListCreateAPIView):
     serializer_class = SubTaskSerializer
     queryset = SubTask.objects.all()
-
 
 
 def handle_task_action(view_func):
@@ -127,4 +125,3 @@ class SubTaskActionView(viewsets.ModelViewSet):
 class TaskView(ListCreateAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-
