@@ -159,3 +159,4 @@ PIKA_PORT = os.environ.get('PIKA_PORT') or 5672
 
 
 CSRF_TRUSTED_ORIGINS=['https://15minadmin.1213213.xyz']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
