@@ -12,7 +12,6 @@ services:
 
     admin_api:
         container_name: "admin_api"
-        #image: malyyigor34/gmaps_api_parser:1.0
         build: .
         ports:
             - "8111:8000"
@@ -27,7 +26,6 @@ services:
             rabbitmq:
                 condition: service_started
 
-
     db:
         image: mysql:5.7
         restart: always
@@ -41,9 +39,29 @@ services:
         volumes:
             - my-db:/var/lib/mysql
 
+    mongo:
+        image: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: 343877
+        ports:
+            - "27017:27017"
+
+    mongo-express:
+        image: mongo-express
+        restart: always
+        ports:
+            - "8081:8081"
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: root
+            ME_CONFIG_MONGODB_ADMINPASSWORD: 343877
+            ME_CONFIG_MONGODB_URL: mongodb://root:343877@mongo:27017/
+
 volumes:
   my-db:
 
 #TODO jenkins pipeline
 #TODO tests for django api views
 #TODO django logs
+#TODO create env file

@@ -118,9 +118,9 @@ class SubTask(Model):
             self.status = target_status
         else:
             raise self.InvalidStatusChange(f"Cant change status to {target_status} for task with status {self.status}, start: {self.start}, finish: {self.finish}")
-        if target_status in IS_FINISH_DATE_UPDATE_REQUIRED:
+        if IS_FINISH_DATE_UPDATE_REQUIRED.get(target_status, False):
             self.finish = datetime.now()
-        if target_status in IS_START_DATE_UPDATE_REQUIRED:
+        if IS_START_DATE_UPDATE_REQUIRED.get(target_status, False):
             self.start = datetime.now()
         self.save()
 
