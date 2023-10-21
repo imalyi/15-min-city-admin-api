@@ -41,7 +41,6 @@ IS_START_DATE_UPDATE_REQUIRED = {
 class Credential(Model):
     token = CharField(max_length=560)
     name = CharField(max_length=500)
-    request_limit = IntegerField(default=5000)
 
     def __repr__(self):
         return self.name
@@ -106,6 +105,7 @@ class SubTask(Model):
             return subtask.credentials.token
         else:
             return None
+
 
     def __str__(self):
         return f"{self.place}-{str(self.created)}"

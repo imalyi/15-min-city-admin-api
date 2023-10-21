@@ -7,7 +7,6 @@ from task_sender import TaskSender
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
 from rest_framework import status
-
 import functools
 
 
@@ -75,7 +74,8 @@ def handle_subtask_action(view_func):
     def wrapper(self, request, pk=None):
         subtask = self.get_object()
         try:
-            return view_func(self, subtask, request, pk)
+            view_func(self, subtask, request, pk)
+            return Response({'detail': 'ok'})
         except (SubTask.InvalidStatusChange, SubTask.InvalidProgressValue) as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return wrapper
@@ -89,37 +89,31 @@ class SubTaskActionView(viewsets.ModelViewSet):
     @handle_subtask_action
     def error(self, subtask, request, pk=None):
         subtask.change_status_to_error()
-        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def done(self, subtask, request, pk=None):
         subtask.change_status_to_done()
-        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def start(self, subtask, request, pk=None):
         subtask.change_status_to_running()
-        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def cancel(self, subtask, request, pk=None):
         subtask.change_status_to_canceled()
-        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['get'])
     @handle_subtask_action
     def stop(self, subtask, request, pk=None):
         subtask.change_status_to_stopped()
-        return Response({'detail': 'ok'})
 
     @action(detail=True, methods=['post'])
     @handle_subtask_action
     def track(self, subtask, request, pk=None):
         subtask.update_progress(request.data.get('progress', 0))
-        return Response({'detail': 'ok'})
 
 
 class TaskView(ListCreateAPIView):
