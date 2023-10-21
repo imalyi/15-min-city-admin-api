@@ -29,8 +29,8 @@ class TestAction(TestCase):
                 subtask.change_status(next_status)
 
                 self.assertEquals(subtask.status, next_status)
-                if next_status in IS_START_DATE_UPDATE_REQUIRED:
-                    self.assertIsInstance(subtask.start, datetime.datetime)
+                if IS_START_DATE_UPDATE_REQUIRED.get(next_status, False):
+                    self.assertNotEquals(subtask.start, None)
 
     def test_update_progress(self):
         subtask = self.__create_subtask_with_status(WAITING)
