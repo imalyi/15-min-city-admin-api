@@ -12,7 +12,7 @@ services:
 
     admin_api:
         container_name: "admin_api"
-        build: .
+        image: malyyigor34/15_minute_admin_api
         ports:
             - "8111:8000"
         environment:

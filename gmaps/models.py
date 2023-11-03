@@ -63,6 +63,10 @@ class Coordinate(Model):
     name = CharField(max_length=250)
     lon = FloatField()
     lat = FloatField()
+    radius = IntegerField(default=10000)
+
+    class Meta:
+        unique_together = ('name', 'lon', 'lat', 'radius', )
 
     def __str__(self):
         return self.name
