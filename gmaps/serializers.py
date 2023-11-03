@@ -20,7 +20,7 @@ class PlaceTypeSerializer(ModelSerializer):
 class CoordinateSerializer(ModelSerializer):
     class Meta:
         model = Coordinate
-        fields = ('name', 'lat', 'lon')
+        fields = ('name', 'lat', 'lon', 'radius')
 
 
 class SubTaskSerializer(ModelSerializer):
