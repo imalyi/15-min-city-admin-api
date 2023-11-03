@@ -37,7 +37,7 @@ services:
         ports:
             - '3306:3306'
         volumes:
-            - my-db:/var/lib/mysql
+            - /data/15min/api_db:/var/lib/mysql
 
     mongo:
         image: mongo
@@ -47,7 +47,8 @@ services:
             MONGO_INITDB_ROOT_PASSWORD: 343877
         ports:
             - "27017:27017"
-
+        volumes:
+            - "/data/15min/gmaps_data/:data/db/"
     mongo-express:
         image: mongo-express
         restart: always
@@ -57,11 +58,6 @@ services:
             ME_CONFIG_MONGODB_ADMINUSERNAME: root
             ME_CONFIG_MONGODB_ADMINPASSWORD: 343877
             ME_CONFIG_MONGODB_URL: mongodb://root:343877@mongo:27017/
-
-volumes:
-  my-db:
-
-#TODO jenkins pipeline
 #TODO tests for django api views
 #TODO django logs
 #TODO create env file
