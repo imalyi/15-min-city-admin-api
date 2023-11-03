@@ -8,7 +8,7 @@ from gmaps.models import DONE, RUNNING, ERROR, STOPPED, WAITING
 class CredentialSerializer(ModelSerializer):
     class Meta:
         model = Credential
-        fields = ('name', 'request_limit')
+        fields = ('name')
 
 
 class PlaceTypeSerializer(ModelSerializer):
