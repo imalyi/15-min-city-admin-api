@@ -8,7 +8,7 @@ from gmaps.models import DONE, RUNNING, ERROR, STOPPED, WAITING
 class CredentialSerializer(ModelSerializer):
     class Meta:
         model = Credential
-        fields = ('name', )
+        fields = '__all__'
 
 
 class PlaceTypeSerializer(ModelSerializer):
@@ -47,10 +47,14 @@ class TaskSerializer(ModelSerializer):
     canceled_subtask_count = SerializerMethodField()
     stopped_subtask_count = SerializerMethodField()
     error_subtask_count = SerializerMethodField()
+    status = SerializerMethodField()
 
     class Meta:
         model = Task
         fields = "__all__"
+
+    def get_status(self, obj):
+        return obj.status
 
     def get_subtask_count(self, obj):
         return obj.subtask_count
