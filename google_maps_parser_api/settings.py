@@ -6,6 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-k54%^qt^54h&oj7b55)hmby6z%hrjd*@a15fbsy5x@d%ipf*nj'
 DEBUG = True
 
+URL = 'https://15minadmin.1213213.xyz'
+
 ALLOWED_HOSTS = ['*']
 
 
@@ -24,8 +26,7 @@ INSTALLED_APPS = [
     'google_maps_parser_api',
     'users',
     'gmaps',
-
-
+    'status'
 ]
 
 MIDDLEWARE = [

@@ -10,7 +10,7 @@ router.register('task', TaskActionView)
 urlpatterns = [
     path('credential/', CredentialView.as_view()),
     path('coordinates/', CoordinatesView.as_view()),
-    path('subtask/', SubTaskView.as_view()),
+    path('subtask/', SubTaskView.as_view(), name='subtask'),
     path('task/', TaskView.as_view()),
     path('place/', PlaceTypeView.as_view()),
 ] + router.urls

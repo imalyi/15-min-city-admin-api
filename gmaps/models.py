@@ -2,13 +2,15 @@
 from datetime import datetime
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 from django.db.models import Sum
+from rest_framework.reverse import reverse
+from status.SUB_TASK_STATUSES import *
+from google_maps_parser_api.settings import URL
 
-WAITING = 'waiting'
-DONE = 'done'
-RUNNING = 'running'
-ERROR = 'error'
-STOPPED = 'stopped'
-CANCELED = 'canceled'
+STATUS_URL = {
+    RUNNING: 'start',
+    STOPPED: 'stop',
+    CANCELED: 'cancel',
+}
 
 POSSIBLE_STATUSES = {
     WAITING: [RUNNING, CANCELED],
@@ -18,6 +20,7 @@ POSSIBLE_STATUSES = {
     STOPPED: [],
     CANCELED: []
 }
+
 
 IS_FINISH_DATE_UPDATE_REQUIRED = {
     WAITING: False,
@@ -115,6 +118,13 @@ class SubTask(Model):
 
     def __repr__(self):
         return f"{self.place}-{str(self.created)}"
+
+    @property
+    def actions(self):
+        res = {}
+        for possible_status in POSSIBLE_STATUSES.get(self.status):
+            res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" +STATUS_URL.get(possible_status)
+        return res
 
     def change_status(self, target_status):
         if target_status in POSSIBLE_STATUSES.get(self.status):
@@ -226,6 +236,10 @@ class Task(Model):
             return RUNNING
         if self.waiting_subtask_count == self.subtask_count:
             return WAITING
+        if self.canceled_subtask_count == self.subtask_count:
+            return CANCELED
+        if self.stopped_subtask_count == self.subtask_count:
+            return STOPPED
 
     def __repr__(self):
         return self.name
