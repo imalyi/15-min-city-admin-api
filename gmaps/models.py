@@ -163,7 +163,7 @@ class Task(Model):
         (STOPPED, 'stopped'),
         (CANCELED, 'canceled')
     )
-    #TODO: status task
+
     name = CharField(max_length=250)
     sub_task = ManyToManyField(SubTask, related_name='subtask')
     date = DateTimeField(auto_now=True)
@@ -216,10 +216,16 @@ class Task(Model):
     def error_subtask_count(self):
         return self.sub_task.filter(status=ERROR).count()
 
-#   TODO: 
-#    @property
-#    def status(self):
-#        self.sub_task.objects.filter(status=WAITING)
+    @property
+    def status(self):
+        if self.error_subtask_count > 0:
+            return ERROR
+        if self.done_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
+            return DONE
+        if self.running_subtask_count > 0:
+            return RUNNING
+        if self.waiting_subtask_count == self.subtask_count:
+            return WAITING
 
     def __repr__(self):
         return self.name
