@@ -98,7 +98,6 @@ class SubTask(Model):
     )
 
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
-    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
     status = CharField(choices=STATUS, default=WAITING, max_length=20)
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
@@ -166,15 +165,6 @@ class SubTask(Model):
 
 
 class Task(Model):
-    STATUS = (
-        (WAITING, 'waiting'),
-        (DONE, 'done'),
-        (RUNNING, 'running'),
-        (ERROR, 'error'),
-        (STOPPED, 'stopped'),
-        (CANCELED, 'canceled')
-    )
-
     name = CharField(max_length=250)
     sub_task = ManyToManyField(SubTask, related_name='subtask')
     date = DateTimeField(auto_now=True)
