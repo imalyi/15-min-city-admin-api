@@ -4,7 +4,7 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets
 from task_sender import TaskSender
-from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
+from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer, CreateTaskSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
 from rest_framework import status
 import functools
@@ -119,3 +119,9 @@ class SubTaskActionView(viewsets.ModelViewSet):
 class TaskView(ListCreateAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        data = (CreateTaskSerializer(data=self.request.data))
+        data.is_valid()
+        data.save()
+        return Response("ok")

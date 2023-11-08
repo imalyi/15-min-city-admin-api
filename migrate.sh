@@ -1,7 +1,9 @@
 #!/bin/bash
 
-rm db.sqlite3
+rm db
 rm -r google_maps_parser_api/migrations/
+
+rm -r gmaps/migrations/
 #sudo docker-compose up -d
 
 python3 manage.py makemigrations users

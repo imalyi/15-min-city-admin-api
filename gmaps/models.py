@@ -167,8 +167,9 @@ class SubTask(Model):
 class Task(Model):
     name = CharField(max_length=250)
     sub_task = ManyToManyField(SubTask, related_name='subtask')
-    date = DateTimeField(auto_now=True)
+    create_date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
+    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
 
     def start(self):
         for subtask in self.sub_task.filter(status=WAITING):
@@ -184,6 +185,15 @@ class Task(Model):
         for subtask in self.sub_task.filter(status=RUNNING):
             subtask.status = STOPPED
             subtask.save()
+
+    @property
+    def last_change_date(self):
+        start = self.sub_task.latest('start').start
+        finish = self.sub_task.latest('finish').finish
+        try:
+            return max([start, finish])
+        except TypeError:
+            return (start or finish)
 
     @property
     def subtask_count(self):
