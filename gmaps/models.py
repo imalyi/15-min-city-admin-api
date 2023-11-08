@@ -123,7 +123,8 @@ class SubTask(Model):
     def actions(self):
         res = {}
         for possible_status in POSSIBLE_STATUSES.get(self.status):
-            res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" +STATUS_URL.get(possible_status)
+            if STATUS_URL.get(possible_status):
+                res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" +STATUS_URL.get(possible_status)
         return res
 
     def change_status(self, target_status):
@@ -234,7 +235,7 @@ class Task(Model):
             return DONE
         if self.running_subtask_count > 0:
             return RUNNING
-        if self.waiting_subtask_count == self.subtask_count:
+        if self.waiting_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
             return WAITING
         if self.canceled_subtask_count == self.subtask_count:
             return CANCELED
