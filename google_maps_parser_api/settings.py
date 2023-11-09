@@ -65,18 +65,18 @@ if os.environ.get('API_DB_NAME'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('API_DB_NAME', 'google_maps_parser_api'),
-            'USER': os.environ.get('API_DB_USER', 'root'),
-            'PASSWORD': os.environ.get('API_DB_PASSWORD', 'admin'),
-            'HOST': os.environ.get('API_DB_HOST', 'localhost'),
-            'PORT': os.environ.get('API_DB_PORT', 3306),
+            'NAME': os.environ.get('API_DB_NAME'),
+            'USER': os.environ.get('API_DB_USER'),
+            'PASSWORD': os.environ.get('API_DB_PASSWORD'),
+            'HOST': os.environ.get('API_DB_HOST'),
+            'PORT': os.environ.get('API_DB_PORT'),
         }
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'db',
+            'NAME': 'db,sqlite3',
 
         }
 
@@ -155,10 +155,10 @@ SIMPLE_JWT = {
 
 APPEND_SLASH = True
 
-PIKA_USERNAME = os.environ.get('PIKA_USERNAME') or 'django_api'
-PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD') or 'django_api'
-PIKA_HOST = os.environ.get('PIKA_HOST') or 'rabbitmq'
-PIKA_PORT = os.environ.get('PIKA_PORT') or 5672
+PIKA_USERNAME = os.environ.get('PIKA_USERNAME')
+PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD')
+PIKA_HOST = os.environ.get('PIKA_HOST')
+PIKA_PORT = os.environ.get('PIKA_PORT')
 
 
 CSRF_TRUSTED_ORIGINS=['https://15minadmin.1213213.xyz']

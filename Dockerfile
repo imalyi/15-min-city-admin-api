@@ -19,5 +19,5 @@ RUN pip install -r requirements.txt
 EXPOSE 8000
 
 
-RUN chmod +x /home/apps/google_maps_parser_api/migrate.sh
-ENTRYPOINT ["./migrate.sh"]
+RUN chmod +x /home/apps/google_maps_parser_api/start.sh
+ENTRYPOINT ["./start.sh"]

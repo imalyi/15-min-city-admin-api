@@ -8,6 +8,23 @@ logger = logging.getLogger(f"{__name__}_TaskSender")
 
 
 class TaskSender:
+    pass
+
+
+def get_task_sender() -> TaskSender:
+    if PIKA_USERNAME != None and PIKA_PASSWORD != None and PIKA_PORT != None and PIKA_HOST != None:
+        return RabbitMQTaskSender()
+    else:
+        return DummyTaskSender()
+
+
+class DummyTaskSender(TaskSender):
+    def send(self, task: str) -> bool:
+        print(task)
+        return True
+
+
+class RabbitMQTaskSender(TaskSender):
     class BrokerConnectionError(Exception):
         pass
 

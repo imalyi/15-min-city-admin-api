@@ -1,8 +1,0 @@
-[report]
-exclude_also =
-    def __repr__
-    def __str__
-
-
-[run]
-omit=*/venv/*,*/migrations/*

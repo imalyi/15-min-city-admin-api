@@ -2,7 +2,6 @@
 
 rm db.sqlite3
 rm -r google_maps_parser_api/migrations/
-#sudo docker-compose up -d
 
 python3 manage.py makemigrations users
 python3 manage.py migrate users
@@ -16,8 +15,8 @@ python3 manage.py migrate gmaps
 python3 manage.py makemigrations
 python3 manage.py migrate
 
-DJANGO_SUPERUSER_USERNAME=igor \
-DJANGO_SUPERUSER_PASSWORD=343877 \
+DJANGO_SUPERUSER_USERNAME=admin \
+DJANGO_SUPERUSER_PASSWORD=admin \
 python3 manage.py createsuperuser --noinput
 
 python3 manage.py test

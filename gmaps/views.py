@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets
-from task_sender import TaskSender
+from task_sender import get_task_sender
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
 from rest_framework import status
@@ -49,7 +49,7 @@ class TaskActionView(viewsets.ModelViewSet):
     @handle_task_action
     def start(self, task, request, pk=None):
         """Send all tasks to execution"""
-        task_sender = TaskSender()
+        task_sender = get_task_sender()
         task_json = JSONRenderer().render(TaskSerializer(task).data)
         task_sender.send(task_json)
         return Response({'detail': f"Task {task} added to queue"})
