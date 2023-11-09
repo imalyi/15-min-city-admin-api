@@ -2,23 +2,18 @@ import pika
 from google_maps_parser_api.settings import PIKA_USERNAME, PIKA_PASSWORD, PIKA_HOST, PIKA_PORT
 import logging
 from load_logging_conf import configure_logging
-
+from abc import ABC, abstractmethod
 configure_logging()
 logger = logging.getLogger(f"{__name__}_TaskSender")
 
 
-class TaskSender:
-    pass
+class TaskSender(ABC):
+    @abstractmethod
+    def send(self, task: str) -> bool:
+        pass
 
 
-def get_task_sender() -> TaskSender:
-    if PIKA_USERNAME != None and PIKA_PASSWORD != None and PIKA_PORT != None and PIKA_HOST != None:
-        return RabbitMQTaskSender()
-    else:
-        return DummyTaskSender()
-
-
-class DummyTaskSender(TaskSender):
+class TaskSenderConsole(TaskSender):
     def send(self, task: str) -> bool:
         print(task)
         return True
@@ -79,3 +74,10 @@ class RabbitMQTaskSender(TaskSender):
             logger.debug("Close connection to rabbitmq")
         except AttributeError:
             pass
+
+
+def get_task_sender() -> TaskSender:
+    if PIKA_USERNAME is not None:
+        return RabbitMQTaskSender()
+    else:
+        return TaskSenderConsole()

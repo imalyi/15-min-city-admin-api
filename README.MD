@@ -10,10 +10,11 @@ python3 -m coverage run manage.py test
 python3 -m coverage report
 ```
 
-### Uruchomienie serweru
+### Wykonać migracje i uruchomić
 ```
-python3 manage.py runserver
+./start.sh
 ```
+
 W przypadku uruchomienia bez zmiennych otoczenia:
 ```
 - PIKA_USERNAME

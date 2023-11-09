@@ -1,6 +1,6 @@
-
+import json_fix
 from datetime import datetime
-from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
+from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, FloatField, DO_NOTHING
 from django.db.models import Sum
 from rest_framework.reverse import reverse
 from status.SUB_TASK_STATUSES import *
@@ -13,10 +13,11 @@ STATUS_URL = {
 }
 
 POSSIBLE_STATUSES = {
-    WAITING: [RUNNING, CANCELED],
+    WAITING: [CANCELED, SENT],
+    SENT: [RUNNING, STOPPED],
     RUNNING: [ERROR, STOPPED, DONE],
     DONE: [],
-    ERROR: [],
+    ERROR: [WAITING],
     STOPPED: [],
     CANCELED: []
 }
@@ -28,7 +29,8 @@ IS_FINISH_DATE_UPDATE_REQUIRED = {
     DONE: True,
     ERROR: True,
     STOPPED: True,
-    CANCELED: True
+    CANCELED: True,
+    SENT: False
 }
 
 IS_START_DATE_UPDATE_REQUIRED = {
@@ -37,13 +39,18 @@ IS_START_DATE_UPDATE_REQUIRED = {
     DONE: False,
     ERROR: False,
     STOPPED: False,
-    CANCELED: False
+    CANCELED: False,
+    SENT: False
 }
 
 
 class Credential(Model):
     token = CharField(max_length=560)
     name = CharField(max_length=500)
+
+
+    def __json__(self):
+        return self.token
 
     def __repr__(self):
         return self.name
@@ -54,6 +61,9 @@ class Credential(Model):
 
 class PlaceType(Model):
     value = CharField(max_length=250, unique=True)
+
+    def __json__(self):
+        return self.value
 
     def __str__(self):
         return self.value
@@ -67,6 +77,13 @@ class Coordinate(Model):
     lon = FloatField()
     lat = FloatField()
     radius = IntegerField(default=10000)
+
+
+    def __json__(self):
+        return {'name': self.name,
+                'lon': self.lon,
+                'lat': self.lat,
+                'radius': self.radius}
 
     class Meta:
         unique_together = ('name', 'lon', 'lat', 'radius', )
@@ -88,17 +105,8 @@ class SubTask(Model):
     class InvalidProgressValue(Exception):
         pass
 
-    STATUS = (
-        (WAITING, 'waiting'),
-        (DONE, 'done'),
-        (RUNNING, 'running'),
-        (ERROR, 'error'),
-        (STOPPED, 'stopped'),
-        (CANCELED, 'canceled')
-    )
-
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
-    status = CharField(choices=STATUS, default=WAITING, max_length=20)
+    status = CharField(choices=STATUS_CHOICES, default=WAITING, max_length=20)
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
     created = DateTimeField(auto_now=True)
@@ -123,7 +131,7 @@ class SubTask(Model):
         res = {}
         for possible_status in POSSIBLE_STATUSES.get(self.status):
             if STATUS_URL.get(possible_status):
-                res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" +STATUS_URL.get(possible_status)
+                res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" + STATUS_URL.get(possible_status)
         return res
 
     def change_status(self, target_status):
@@ -171,6 +179,21 @@ class Task(Model):
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
     coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
 
+    def __json__(self):
+        places = []
+        for subtask in self.sub_task.all():
+            places.append(subtask.place)
+
+        return {'name': self.name,
+                'places': places,
+                'coordinates': self.coordinates,
+                'token': self.credentials
+                }
+
+    def mark_as_sent(self):
+        for subtask in self.sub_task.all():
+            subtask.change_status(SENT)
+
     def start(self):
         for subtask in self.sub_task.filter(status=WAITING):
             subtask.status = RUNNING
@@ -193,7 +216,7 @@ class Task(Model):
         try:
             return max([start, finish])
         except TypeError:
-            return (start or finish)
+            return start or finish
 
     @property
     def subtask_count(self):
@@ -226,21 +249,6 @@ class Task(Model):
     @property
     def error_subtask_count(self):
         return self.sub_task.filter(status=ERROR).count()
-
-    @property
-    def status(self):
-        if self.error_subtask_count > 0:
-            return ERROR
-        if self.done_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
-            return DONE
-        if self.running_subtask_count > 0:
-            return RUNNING
-        if self.waiting_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
-            return WAITING
-        if self.canceled_subtask_count == self.subtask_count:
-            return CANCELED
-        if self.stopped_subtask_count == self.subtask_count:
-            return STOPPED
 
     def __repr__(self):
         return self.name

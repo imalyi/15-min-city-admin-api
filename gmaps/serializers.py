@@ -45,7 +45,6 @@ class TaskSerializer(ModelSerializer):
     canceled_subtask_count = SerializerMethodField()
     stopped_subtask_count = SerializerMethodField()
     error_subtask_count = SerializerMethodField()
-    status = SerializerMethodField()
     last_change_date = SerializerMethodField()
     coordinates = CoordinateSerializer()
 
@@ -67,9 +66,6 @@ class TaskSerializer(ModelSerializer):
 
     def get_last_change_date(self, obj):
         return obj.last_change_date
-
-    def get_status(self, obj):
-        return obj.status
 
     def get_subtask_count(self, obj):
         return obj.subtask_count
