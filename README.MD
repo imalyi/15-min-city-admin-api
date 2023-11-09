@@ -3,6 +3,15 @@
 python3 -m venv create venv
 source venv/bin/activate
 python3 -m pip install -r requirements.txt
+```
+### Uruchomienie testów
+```
+python3 -m coverage run manage.py test
+python3 -m coverage report
+```
+
+### Uruchomienie serweru
+```
 python3 manage.py runserver
 ```
 W przypadku uruchomienia bez zmiennych otoczenia:
