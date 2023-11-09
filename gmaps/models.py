@@ -2,13 +2,15 @@
 from datetime import datetime
 from django.db.models import Model, IntegerField, CharField, ManyToManyField, ForeignKey, DateTimeField, Choices, FloatField, DO_NOTHING, CASCADE
 from django.db.models import Sum
+from rest_framework.reverse import reverse
+from status.SUB_TASK_STATUSES import *
+from google_maps_parser_api.settings import URL
 
-WAITING = 'waiting'
-DONE = 'done'
-RUNNING = 'running'
-ERROR = 'error'
-STOPPED = 'stopped'
-CANCELED = 'canceled'
+STATUS_URL = {
+    RUNNING: 'start',
+    STOPPED: 'stop',
+    CANCELED: 'cancel',
+}
 
 POSSIBLE_STATUSES = {
     WAITING: [RUNNING, CANCELED],
@@ -18,6 +20,7 @@ POSSIBLE_STATUSES = {
     STOPPED: [],
     CANCELED: []
 }
+
 
 IS_FINISH_DATE_UPDATE_REQUIRED = {
     WAITING: False,
@@ -95,7 +98,6 @@ class SubTask(Model):
     )
 
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
-    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
     status = CharField(choices=STATUS, default=WAITING, max_length=20)
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
@@ -110,12 +112,19 @@ class SubTask(Model):
         else:
             return None
 
-
     def __str__(self):
         return f"{self.place}-{str(self.created)}"
 
     def __repr__(self):
         return f"{self.place}-{str(self.created)}"
+
+    @property
+    def actions(self):
+        res = {}
+        for possible_status in POSSIBLE_STATUSES.get(self.status):
+            if STATUS_URL.get(possible_status):
+                res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" +STATUS_URL.get(possible_status)
+        return res
 
     def change_status(self, target_status):
         if target_status in POSSIBLE_STATUSES.get(self.status):
@@ -156,19 +165,11 @@ class SubTask(Model):
 
 
 class Task(Model):
-    STATUS = (
-        (WAITING, 'waiting'),
-        (DONE, 'done'),
-        (RUNNING, 'running'),
-        (ERROR, 'error'),
-        (STOPPED, 'stopped'),
-        (CANCELED, 'canceled')
-    )
-
     name = CharField(max_length=250)
     sub_task = ManyToManyField(SubTask, related_name='subtask')
-    date = DateTimeField(auto_now=True)
+    create_date = DateTimeField(auto_now=True)
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
+    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
 
     def start(self):
         for subtask in self.sub_task.filter(status=WAITING):
@@ -184,6 +185,15 @@ class Task(Model):
         for subtask in self.sub_task.filter(status=RUNNING):
             subtask.status = STOPPED
             subtask.save()
+
+    @property
+    def last_change_date(self):
+        start = self.sub_task.latest('start').start
+        finish = self.sub_task.latest('finish').finish
+        try:
+            return max([start, finish])
+        except TypeError:
+            return (start or finish)
 
     @property
     def subtask_count(self):
@@ -216,6 +226,21 @@ class Task(Model):
     @property
     def error_subtask_count(self):
         return self.sub_task.filter(status=ERROR).count()
+
+    @property
+    def status(self):
+        if self.error_subtask_count > 0:
+            return ERROR
+        if self.done_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
+            return DONE
+        if self.running_subtask_count > 0:
+            return RUNNING
+        if self.waiting_subtask_count == self.subtask_count - self.stopped_subtask_count - self.canceled_subtask_count:
+            return WAITING
+        if self.canceled_subtask_count == self.subtask_count:
+            return CANCELED
+        if self.stopped_subtask_count == self.subtask_count:
+            return STOPPED
 
     def __repr__(self):
         return self.name

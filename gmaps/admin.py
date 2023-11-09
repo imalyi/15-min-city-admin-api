@@ -9,11 +9,11 @@ class CoordinateConfig(admin.ModelAdmin):
 
 
 class SubTaskConfig(admin.ModelAdmin):
-    list_display = ('place', 'coordinates', 'status', 'start', 'finish', 'created', 'items_collected')
+    list_display = ('place', 'status', 'start', 'finish', 'created', 'items_collected')
 
 
 class TaskConfig(admin.ModelAdmin):
-    list_display = ('name', 'date', 'credentials', 'subtask_count', 'items_collected')
+    list_display = ('name', 'create_date', 'credentials', 'subtask_count', 'items_collected')
 
 
 admin.site.register(Coordinate, CoordinateConfig)

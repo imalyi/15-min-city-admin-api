@@ -1,35 +1,32 @@
-import datetime
-
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, CharField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, Serializer, ListField, CharField, IntegerField, ValidationError
 from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
-from gmaps.models import DONE, RUNNING, ERROR, STOPPED, WAITING
 
 
 class CredentialSerializer(ModelSerializer):
     class Meta:
         model = Credential
-        fields = ('name', )
+        fields = '__all__'
 
 
 class PlaceTypeSerializer(ModelSerializer):
     class Meta:
         model = PlaceType
         fields = ('value', )
+        read_only_fiedls = ('value', )
 
 
 class CoordinateSerializer(ModelSerializer):
     class Meta:
         model = Coordinate
-        fields = ('name', 'lat', 'lon', 'radius')
+        fields = '__all__'
 
 
 class SubTaskSerializer(ModelSerializer):
-    coordinates = CoordinateSerializer()
     place = PlaceTypeSerializer()
-    credentials = SerializerMethodField()
+    actions = SerializerMethodField(read_only=True)
 
-    def get_credentials(self, obj):
-        return obj.credentials
+    def get_actions(self, obj):
+        return obj.actions
 
     class Meta:
         model = SubTask
@@ -39,6 +36,7 @@ class SubTaskSerializer(ModelSerializer):
 class TaskSerializer(ModelSerializer):
     sub_task = SubTaskSerializer(many=True)
     credentials = CredentialSerializer()
+
     subtask_count = SerializerMethodField()
     items_collected = SerializerMethodField()
     waiting_subtask_count = SerializerMethodField()
@@ -47,10 +45,31 @@ class TaskSerializer(ModelSerializer):
     canceled_subtask_count = SerializerMethodField()
     stopped_subtask_count = SerializerMethodField()
     error_subtask_count = SerializerMethodField()
+    status = SerializerMethodField()
+    last_change_date = SerializerMethodField()
+    coordinates = CoordinateSerializer()
+
+    def create(self, validated_data):
+        for sub_task in validated_data.pop('sub_task'):
+            place_data = sub_task.get('place')
+            place_value = place_data.get('value')
+            try:
+                # Try to get the PlaceType object by 'value'
+                place = PlaceType.objects.get(value=place_value)
+            except PlaceType.DoesNotExist:
+                # If it doesn't exist, create it
+                place = PlaceType.objects.create(value=place_value)
+            print(place)
 
     class Meta:
         model = Task
         fields = "__all__"
+
+    def get_last_change_date(self, obj):
+        return obj.last_change_date
+
+    def get_status(self, obj):
+        return obj.status
 
     def get_subtask_count(self, obj):
         return obj.subtask_count
@@ -75,3 +94,33 @@ class TaskSerializer(ModelSerializer):
 
     def get_error_subtask_count(self, obj):
         return obj.error_subtask_count
+
+
+class CreateTaskSerializer(Serializer):
+    places = ListField()  # list of ids of places
+    name = CharField()
+    credentials = IntegerField()
+    coordinates = IntegerField()
+
+    def create(self, validated_data):
+        subtasks = []
+        for place in validated_data.get('places'):
+            try:
+                place_obj = PlaceType.objects.get(id=place)
+                subtasks.append(SubTask.objects.create(place=place_obj))
+            except PlaceType.DoesNotExist:
+                raise ValidationError(f"{place} does not exists")
+        try:
+            credentials = Credential.objects.get(id=validated_data.get('credentials'))
+        except Credential.DoesNotExist:
+            raise ValidationError(f"Credential with id {validated_data.get('credentials')} does not exists")
+
+        try:
+            coordinates = Coordinate.objects.get(id=validated_data.get('coordinates'))
+        except Coordinate.DoesNotExist:
+            raise ValidationError(f"Coordinates with id {validated_data.get('coordinates')} does not exists")
+
+        task = Task.objects.create(name=validated_data.get('name'), credentials=credentials,
+                            coordinates=coordinates)
+        task.sub_task.set(subtasks)
+        return task
