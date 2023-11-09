@@ -1,13 +1,11 @@
 import json
-
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView
-from rest_framework.renderers import JSONRenderer
 from rest_framework import viewsets
 from task_sender import get_task_sender
-from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, SubTaskSerializer, TaskSerializer
-from gmaps.models import Credential, PlaceType, Coordinate, SubTask, Task
+from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer
+from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task
 from rest_framework import status
 import functools
 
@@ -27,19 +25,15 @@ class CoordinatesView(ListCreateAPIView):
     queryset = Coordinate.objects.all()
 
 
-class SubTaskView(ListCreateAPIView):
-    serializer_class = SubTaskSerializer
-    queryset = SubTask.objects.all()
-
-
 def handle_task_action(view_func):
     @functools.wraps(view_func)
     def wrapper(self, request, pk=None):
         task = self.get_object()
         try:
-            return view_func(self, task, request, pk)
-        except Exception as err:
-            print(err)
+            view_func(self, task, request, pk)
+            return Response({'detail': 'ok'})
+        except (Task.InvalidStatusChange, Task.InvalidProgressValue) as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return wrapper
 
 
@@ -50,74 +44,49 @@ class TaskActionView(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     @handle_task_action
     def start(self, task, request, pk=None):
-        """Send all tasks to execution"""
+        #TODO remove
         task_sender = get_task_sender()
         task_sender.send(json.dumps(task))
-        task.mark_as_sent()
+        task.change_status_to_sent()
         return Response({'detail': f"Task {task} added to queue"})
 
     @action(detail=True, methods=['get'])
     @handle_task_action
+    def stop(self, task, request, pk=None):
+        task.stop()
+        return Response({'detail': f"Task {task} stopped"})
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
+    def error(self, task, request, pk=None):
+        task.change_status_to_error()
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
+    def done(self, task, request, pk=None):
+        task.change_status_to_done()
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
+    def running(self, task, request, pk=None):
+        task.change_status_to_running()
+
+    @action(detail=True, methods=['get'])
+    @handle_task_action
     def cancel(self, task, request, pk=None):
-        """Cancel all subtask with status WAITING"""
-        task.cancel()
-        return Response({'detail': f"Task {task} canceled"})
+        task.change_status_to_canceled()
 
     @action(detail=True, methods=['get'])
     @handle_task_action
     def stop(self, task, request, pk=None):
-        """Stop all subtask with status RUNNING"""
-        task.stop()
-        return Response({'detail': f"Task {task} stopped"})
-
-
-def handle_subtask_action(view_func):
-    @functools.wraps(view_func)
-    def wrapper(self, request, pk=None):
-        subtask = self.get_object()
-        try:
-            view_func(self, subtask, request, pk)
-            return Response({'detail': 'ok'})
-        except (SubTask.InvalidStatusChange, SubTask.InvalidProgressValue) as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    return wrapper
-
-
-class SubTaskActionView(viewsets.ModelViewSet):
-    serializer_class = SubTaskSerializer
-    queryset = SubTask.objects.all()
-
-    @action(detail=True, methods=['get'])
-    @handle_subtask_action
-    def error(self, subtask, request, pk=None):
-        subtask.change_status_to_error()
-
-    @action(detail=True, methods=['get'])
-    @handle_subtask_action
-    def done(self, subtask, request, pk=None):
-        subtask.change_status_to_done()
-
-    @action(detail=True, methods=['get'])
-    @handle_subtask_action
-    def start(self, subtask, request, pk=None):
-        subtask.change_status_to_running()
-
-    @action(detail=True, methods=['get'])
-    @handle_subtask_action
-    def cancel(self, subtask, request, pk=None):
-        subtask.change_status_to_canceled()
-
-    @action(detail=True, methods=['get'])
-    @handle_subtask_action
-    def stop(self, subtask, request, pk=None):
-        subtask.change_status_to_stopped()
+        task.change_status_to_stopped()
 
     @action(detail=True, methods=['post'])
-    @handle_subtask_action
-    def track(self, subtask, request, pk=None):
-        subtask.update_progress(request.data.get('progress', 0))
+    @handle_task_action
+    def track(self, task, request, pk=None):
+        task.update_progress(request.data.get('progress', 0))
 
 
-class TaskView(ListCreateAPIView):
+class TaskTemplateView(ListCreateAPIView):
     serializer_class = TaskSerializer
-    queryset = Task.objects.all()
+    queryset = TaskTemplate.objects.all()

@@ -1,6 +1,6 @@
 import datetime
 
-from gmaps.models import SubTask, PlaceType, Coordinate, Task, Credential
+from gmaps.models import SubTask, PlaceType, Coordinate, TaskTemplate, Credential
 from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR, STOPPED
 from django.test import TestCase
 
@@ -33,7 +33,7 @@ class TestTaskModel(TestCase):
     def test_subtask_count(self):
         for status in [WAITING, RUNNING, ERROR, DONE, STOPPED, CANCELED]:
             subtasks = self.__create_subtasks(status)
-            task = Task.objects.create(name='Test', credentials=self.credentials)
+            task = TaskTemplate.objects.create(name='Test', credentials=self.credentials)
             task.sub_task.set(subtasks)
             task.save()
 
