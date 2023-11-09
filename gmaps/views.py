@@ -43,15 +43,6 @@ class TaskActionView(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     @handle_task_action
-    def start(self, task, request, pk=None):
-        #TODO remove
-        task_sender = get_task_sender()
-        task_sender.send(json.dumps(task))
-        task.change_status_to_sent()
-        return Response({'detail': f"Task {task} added to queue"})
-
-    @action(detail=True, methods=['get'])
-    @handle_task_action
     def stop(self, task, request, pk=None):
         task.stop()
         return Response({'detail': f"Task {task} stopped"})
