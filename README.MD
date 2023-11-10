@@ -41,7 +41,6 @@ services:
             - RABBITMQ_DEFAULT_PASS=admin
         ports:
             - '5672:5672'
-            - '15672:15672'
 
     api:
         container_name: "api"
