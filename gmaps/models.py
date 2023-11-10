@@ -49,6 +49,9 @@ class Credential(Model):
     token = CharField(max_length=560)
     name = CharField(max_length=500)
 
+    class Meta:
+        unique_together = ('token', 'name')
+
     def __json__(self):
         return self.token
 

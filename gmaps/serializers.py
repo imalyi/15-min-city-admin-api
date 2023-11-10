@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField
 from gmaps.models import Credential, PlaceType, Coordinate, Task, TaskTemplate, Schedule
-
+from django.db.utils import IntegrityError
 
 class CredentialSerializer(ModelSerializer):
     class Meta:
@@ -27,6 +27,17 @@ class ScheduleSerializer(ModelSerializer):
 
 
 class TaskTemplateSerializer(ModelSerializer):
+    place = PlaceTypeSerializer()
+    credentials = CredentialSerializer()
+    coordinates = CoordinateSerializer()
+    schedule = ScheduleSerializer()
+
+    class Meta:
+        model = TaskTemplate
+        fields = ("place", "credentials", "coordinates", "schedule", "id")
+
+
+class TaskTemplateCreateSerializer(ModelSerializer):
     place = PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
     credentials = PrimaryKeyRelatedField(queryset=Credential.objects.all())
     coordinates = PrimaryKeyRelatedField(queryset=Coordinate.objects.all())
@@ -34,7 +45,7 @@ class TaskTemplateSerializer(ModelSerializer):
 
     class Meta:
         model = TaskTemplate
-        fields = ("place", "credentials", "coordinates", "schedule", "id")
+        fields = "__all__"
 
 
 class TaskSerializer(ModelSerializer):

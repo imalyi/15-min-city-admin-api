@@ -7,19 +7,22 @@ from users.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
+def create_task_template(place_value, token, token_name, schedule_name, coordinates_name, lon, lat):
+    place = PlaceType.objects.create(value=place_value)
+    credentials = Credential.objects.create(name=token_name, token=token)
+    schedule = Schedule.objects.create(name=schedule_name)
+    coordinates = Coordinate.objects.create(name=coordinates_name, lon=lon, lat=lat)
+    task_template = TaskTemplate.objects.create(place=place, credentials=credentials, schedule=schedule,
+                                                coordinates=coordinates)
+    return task_template
+
+
 class TestTaskTemplate(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser('admin', 'admin')
         self.access_token = "Bearer " + str(RefreshToken.for_user(self.admin).access_token)
-        self.template = self.__create_task_template("place", "secret", "secret_name", "every day", "city", 12, 13)
+        self.template = create_task_template("place", "secret", "secret_name", "every day", "city", 12, 13)
 
-    def __create_task_template(self, place_value, token, token_name, schedule_name, coordinates_name, lon, lat):
-        place = PlaceType.objects.create(value=place_value)
-        credentials = Credential.objects.create(name=token_name, token=token)
-        schedule = Schedule.objects.create(name=schedule_name)
-        coordinates = Coordinate.objects.create(name=coordinates_name, lon=lon, lat=lat)
-        task_template = TaskTemplate.objects.create(place=place, credentials=credentials, schedule=schedule, coordinates=coordinates)
-        return task_template
 
     def test_get_authorised(self):
         response = self.client.get(reverse('template-list'),
