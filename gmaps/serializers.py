@@ -34,7 +34,7 @@ class TaskTemplateSerializer(ModelSerializer):
 
     class Meta:
         model = TaskTemplate
-        fields = "__all__"
+        fields = ("place", "credentials", "coordinates", "schedule", "id")
 
 
 class TaskSerializer(ModelSerializer):

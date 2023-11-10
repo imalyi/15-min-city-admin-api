@@ -1,21 +1,21 @@
 import json
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import viewsets
 from task_sender import get_task_sender
-from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer
+from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer, TaskTemplateSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task
 from rest_framework import status
 import functools
 
 
-class CredentialView(ListCreateAPIView):
+class CredentialView(viewsets.ModelViewSet):
     serializer_class = CredentialSerializer
     queryset = Credential.objects.all()
 
 
-class PlaceTypeView(ListCreateAPIView):
+class PlaceTypeView(viewsets.ModelViewSet):
     serializer_class = PlaceTypeSerializer
     queryset = PlaceType.objects.all()
 
@@ -78,6 +78,6 @@ class TaskActionView(viewsets.ModelViewSet):
         task.update_progress(request.data.get('progress', 0))
 
 
-class TaskTemplateView(ListCreateAPIView):
-    serializer_class = TaskSerializer
+class TaskTemplateView(viewsets.ModelViewSet):
+    serializer_class = TaskTemplateSerializer
     queryset = TaskTemplate.objects.all()

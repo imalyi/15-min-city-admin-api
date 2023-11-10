@@ -4,11 +4,13 @@ from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTim
 from rest_framework.reverse import reverse
 from status.SUB_TASK_STATUSES import *
 from google_maps_parser_api.settings import URL
+from django.utils import timezone
+
 
 STATUS_URL = {
     STOPPED: 'stop',
     CANCELED: 'cancel',
-
+    RUNNING: 'start'
 }
 
 POSSIBLE_STATUSES = {
@@ -164,9 +166,9 @@ class Task(Model):
         else:
             raise self.InvalidStatusChange(f"Cant change status to {target_status} for task with status {self.status}, start: {self.start}, finish: {self.finish}")
         if IS_FINISH_DATE_UPDATE_REQUIRED.get(target_status, False):
-            self.finish = datetime.now()
+            self.finish = timezone.now()
         if IS_START_DATE_UPDATE_REQUIRED.get(target_status, False):
-            self.start = datetime.now()
+            self.start = timezone.now()
 
     def change_status_to_stopped(self):
         self.change_status(STOPPED)

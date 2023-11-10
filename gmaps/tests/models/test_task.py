@@ -1,5 +1,7 @@
 import datetime
 import json
+from django.utils import timezone
+
 
 from google_maps_parser_api.settings import URL
 from gmaps.models import PlaceType, Coordinate, Task, TaskTemplate, Credential, Schedule
@@ -21,9 +23,9 @@ class TestAction(TestCase):
         task = Task.objects.create(template=self.task_template, status=status)
         task.save()
         if IS_FINISH_DATE_UPDATE_REQUIRED.get(status):
-            task.finish = datetime.datetime.now()
+            task.finish = timezone.now()
         if IS_START_DATE_UPDATE_REQUIRED.get(status):
-            task.start = datetime.datetime.now()
+            task.start = timezone.now()
         task.save()
         return task
 

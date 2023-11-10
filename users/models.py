@@ -23,7 +23,7 @@ class CustomAccountManager(BaseUserManager):
         return user
 
 
-class NewUser(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin):
     username = CharField(max_length=150, unique=True)
     start_date = DateTimeField(auto_now=True, blank=True)
     is_staff = BooleanField(default=True)

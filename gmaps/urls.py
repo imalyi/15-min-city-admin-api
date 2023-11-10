@@ -5,10 +5,10 @@ from rest_framework import routers
 
 router = routers.SimpleRouter()
 router.register('task', TaskActionView)
+router.register('credential', CredentialView, basename='credential')
+router.register('place', PlaceTypeView, basename='place'),
+router.register('template', TaskTemplateView, basename='template')
 
 urlpatterns = [
-    path('credential/', CredentialView.as_view()),
     path('coordinates/', CoordinatesView.as_view()),
-    path('template/', TaskTemplateView.as_view(), name='template'),
-    path('place/', PlaceTypeView.as_view()),
 ] + router.urls
