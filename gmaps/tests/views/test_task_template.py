@@ -21,9 +21,42 @@ class TestTaskTemplate(APITestCase):
         task_template = TaskTemplate.objects.create(place=place, credentials=credentials, schedule=schedule, coordinates=coordinates)
         return task_template
 
-    def test_get(self):
+    def test_get_authorised(self):
         response = self.client.get(reverse('template-list'),
                                    HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
         serialized_data = TaskTemplateSerializer(self.template).data
         self.assertEquals(response.data, [serialized_data])
+
+    def test_post_authorised(self):
+        TaskTemplate.objects.all().delete()
+        data = {"place": 1,
+                "credentials": 1,
+                "coordinates": 1,
+                "schedule": 1
+                }
+        response = self.client.post(reverse('template-list'), data=data, HTTP_AUTHORIZATION=self.access_token)
+        self.assertEquals(response.status_code, HTTP_201_CREATED)
+        self.assertIsInstance(TaskTemplate.objects.get(place=1), TaskTemplate)
+
+    def test_retrieve_task_template_authorised(self):
+        response = self.client.get(reverse('template-detail', str(self.template.id)), HTTP_AUTHORIZATION=self.access_token)
+        self.assertEquals(response.status_code, HTTP_200_OK)
+        serialized_data = TaskTemplateSerializer(self.template).data
+        self.assertEquals(response.data, serialized_data)
+
+    def test_update_task_template_authorised(self):
+        url = reverse('template-detail', str(self.template.id))
+        new_place = PlaceType.objects.create(value="new1")
+        data = {"place": new_place.id,
+                "credentials": 1,
+                "coordinates": 1,
+                "schedule": 1
+                }
+        response = self.client.put(url, data=data, HTTP_AUTHORIZATION=self.access_token)
+        self.assertEquals(response.status_code, HTTP_200_OK)
+
+    def test_get_unauthorised(self):
+        url = reverse('template-list')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, HTTP_401_UNAUTHORIZED)

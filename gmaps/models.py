@@ -1,6 +1,6 @@
 import json_fix
 from datetime import datetime
-from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField
+from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE
 from rest_framework.reverse import reverse
 from status.SUB_TASK_STATUSES import *
 from google_maps_parser_api.settings import URL
@@ -10,7 +10,7 @@ from django.utils import timezone
 STATUS_URL = {
     STOPPED: 'stop',
     CANCELED: 'cancel',
-    RUNNING: 'start'
+
 }
 
 POSSIBLE_STATUSES = {
@@ -108,10 +108,10 @@ class Schedule(Model):
 
 
 class TaskTemplate(Model):
-    credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
-    coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
-    place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
-    schedule = ForeignKey(Schedule, on_delete=DO_NOTHING)
+    credentials = ForeignKey(Credential, on_delete=CASCADE)
+    coordinates = ForeignKey(Coordinate, on_delete=CASCADE)
+    place = ForeignKey(PlaceType, on_delete=CASCADE)
+    schedule = ForeignKey(Schedule, on_delete=CASCADE)
 
     def __json__(self):
         return {'place': self.place,
@@ -136,7 +136,7 @@ class Task(Model):
     class InvalidProgressValue(Exception):
         pass
 
-    template = ForeignKey(TaskTemplate, on_delete=DO_NOTHING)
+    template = ForeignKey(TaskTemplate, on_delete=CASCADE)
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
     items_collected = IntegerField(default=0)

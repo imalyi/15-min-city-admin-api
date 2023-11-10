@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField
 from gmaps.models import Credential, PlaceType, Coordinate, Task, TaskTemplate, Schedule
 
 
@@ -27,10 +27,10 @@ class ScheduleSerializer(ModelSerializer):
 
 
 class TaskTemplateSerializer(ModelSerializer):
-    place = PlaceTypeSerializer()
-    credentials = CredentialSerializer()
-    coordinates = CoordinateSerializer()
-    schedule = ScheduleSerializer()
+    place = PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
+    credentials = PrimaryKeyRelatedField(queryset=Credential.objects.all())
+    coordinates = PrimaryKeyRelatedField(queryset=Coordinate.objects.all())
+    schedule = PrimaryKeyRelatedField(queryset=Schedule.objects.all())
 
     class Meta:
         model = TaskTemplate
