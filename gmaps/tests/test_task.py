@@ -1,6 +1,8 @@
 import datetime
+import json
 
-from gmaps.models import PlaceType, Coordinate, Task, TaskTemplate, Credential
+from google_maps_parser_api.settings import URL
+from gmaps.models import PlaceType, Coordinate, Task, TaskTemplate, Credential, Schedule
 from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR, STOPPED, SENT
 from django.test import TestCase
 
@@ -12,8 +14,8 @@ class TestAction(TestCase):
         self.place = PlaceType.objects.create(value="test_place")
         self.coordinates = Coordinate.objects.create(name="test_coords", lat=12.1, lon=24.1)
         self.credentials = Credential.objects.create(token="secret", name="token_name")
-        self.task_template = TaskTemplate(place=self.place, coordinates=self.coordinates, credentials=self.credentials)
-        self.task_template.save()
+        self.schedule = Schedule.objects.create(name="test_schedule")
+        self.task_template = TaskTemplate.objects.create(place=self.place, coordinates=self.coordinates, credentials=self.credentials, schedule=self.schedule)
 
     def __create_task_with_status(self, status):
         task = Task.objects.create(template=self.task_template, status=status)
@@ -57,3 +59,53 @@ class TestAction(TestCase):
 
         task.update_progress(15)
         self.assertEquals(task.items_collected, 15)
+
+    def test_to_json(self):
+        task = self.__create_task_with_status(WAITING)
+        self.assertEquals(json.dumps(task), '{"template": {"place": "test_place", "coordinates": {"name": "test_coords", "lon": 24.1, "lat": 12.1, "radius": 10000}, "token": "secret"}, "id": 1}')
+
+    def test_actions_for_task_with_status_waiting(self):
+        task = self.__create_task_with_status(WAITING)
+        self.assertEquals(task.actions, {'cancel': f"{URL}/gmaps/task/1/cancel"})
+
+    def test_actions_for_task_with_status_sent(self):
+        task = self.__create_task_with_status(SENT)
+        self.assertEquals(task.actions, {'cancel': f"{URL}/gmaps/task/1/cancel"})
+
+    def test_actions_for_task_with_status_running(self):
+        task = self.__create_task_with_status(RUNNING)
+        self.assertEquals(task.actions, {'stop': f"{URL}/gmaps/task/1/stop"})
+
+    def test_actions_for_task_with_status_error(self):
+        task = self.__create_task_with_status(ERROR)
+        self.assertEquals(task.actions, {})
+
+    def test_change_status_to_stopped_from_correct_status(self):
+        task = self.__create_task_with_status(RUNNING)
+        task.change_status_to_stopped()
+        self.assertEquals(task.status, STOPPED)
+
+    def test_change_status_to_sent(self):
+        task = self.__create_task_with_status(WAITING)
+        task.change_status_to_sent()
+        self.assertEquals(task.status, SENT)
+
+    def test_change_status_to_running(self):
+        task = self.__create_task_with_status(SENT)
+        task.change_status_to_running()
+        self.assertEquals(task.status, RUNNING)
+
+    def test_change_status_to_canceled(self):
+        task = self.__create_task_with_status(WAITING)
+        task.change_status_to_canceled()
+        self.assertEquals(task.status, CANCELED)
+
+    def test_change_status_to_done(self):
+        task = self.__create_task_with_status(RUNNING)
+        task.change_status_to_done()
+        self.assertEquals(task.status, DONE)
+
+    def test_change_status_to_error(self):
+        task = self.__create_task_with_status(RUNNING)
+        task.change_status_to_error()
+        self.assertEquals(task.status, ERROR)

@@ -6,14 +6,14 @@ from status.SUB_TASK_STATUSES import *
 from google_maps_parser_api.settings import URL
 
 STATUS_URL = {
-    RUNNING: 'start',
     STOPPED: 'stop',
     CANCELED: 'cancel',
+
 }
 
 POSSIBLE_STATUSES = {
     WAITING: [CANCELED, SENT],
-    SENT: [RUNNING, STOPPED],
+    SENT: [RUNNING, CANCELED],
     RUNNING: [ERROR, STOPPED, DONE],
     DONE: [],
     ERROR: [WAITING],
@@ -92,10 +92,24 @@ class Coordinate(Model):
         return self.name
 
 
+class Schedule(Model):
+    name = CharField(max_length=250)
+    day_of_month = CharField(max_length=15, blank=True, null=True, default=None)
+    minute = CharField(max_length=15, blank=True, null=True, default=None)
+    hour = CharField(max_length=15, blank=True, null=True, default=None)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+
 class TaskTemplate(Model):
     credentials = ForeignKey(Credential, on_delete=DO_NOTHING)
     coordinates = ForeignKey(Coordinate, on_delete=DO_NOTHING)
     place = ForeignKey(PlaceType, on_delete=DO_NOTHING)
+    schedule = ForeignKey(Schedule, on_delete=DO_NOTHING)
 
     def __json__(self):
         return {'place': self.place,
@@ -104,10 +118,10 @@ class TaskTemplate(Model):
                 }
 
     def __repr__(self):
-        return f"{self.place.value}-{self.coordinates.name}-{self.credentials.name}"
+        return self.place.value
 
     def __str__(self):
-        return f"{self.place.value}-{self.coordinates.name}-{self.credentials.name}"
+        return self.place.value
 
 
 class Task(Model):
@@ -141,7 +155,7 @@ class Task(Model):
         res = {}
         for possible_status in POSSIBLE_STATUSES.get(self.status):
             if STATUS_URL.get(possible_status):
-                res[STATUS_URL.get(possible_status)] = URL + reverse('subtask') + str(self.pk) + "/" + STATUS_URL.get(possible_status)
+                res[STATUS_URL.get(possible_status)] = URL + reverse('task-detail', str(self.pk)) + STATUS_URL.get(possible_status)
         return res
 
     def change_status(self, target_status):
@@ -171,7 +185,6 @@ class Task(Model):
 
     def change_status_to_sent(self):
         self.change_status(SENT)
-
 
     def update_progress(self, progress):
         try:

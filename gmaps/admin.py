@@ -1,4 +1,4 @@
-from gmaps.models import Coordinate, Credential, TaskTemplate, PlaceType, Task
+from gmaps.models import Coordinate, Credential, TaskTemplate, PlaceType, Task, Schedule
 from django.contrib import admin
 
 from django.contrib.auth.admin import UserAdmin
@@ -23,6 +23,12 @@ class PlaceTypeAdmin(admin.ModelAdmin):
 class CredentialAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
+
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ('template', 'planned_exec_date', 'status', 'start', 'finish', 'items_collected')
+
+
+@admin.register(Schedule)
+class ScheduleAdmin(admin.ModelAdmin):
+    list_display = ('minute', 'hour', 'day_of_month')
