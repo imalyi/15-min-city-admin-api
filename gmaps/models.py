@@ -1,8 +1,9 @@
 import json_fix
 from datetime import datetime
+from datetime import date
 from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE
 from rest_framework.reverse import reverse
-from status.SUB_TASK_STATUSES import *
+from status.TASK_STATUSES import *
 from google_maps_parser_api.settings import URL
 from django.utils import timezone
 
@@ -18,7 +19,7 @@ POSSIBLE_STATUSES = {
     SENT: [RUNNING, CANCELED],
     RUNNING: [ERROR, STOPPED, DONE],
     DONE: [],
-    ERROR: [WAITING],
+    ERROR: [],
     STOPPED: [],
     CANCELED: []
 }
@@ -144,7 +145,7 @@ class Task(Model):
     finish = DateTimeField(null=True, default=None, blank=True)
     items_collected = IntegerField(default=0)
     status = CharField(choices=STATUS_CHOICES, default=WAITING, max_length=20)
-    planned_exec_date = DateField(default=datetime.now, blank=True)
+    planned_exec_date = DateField(default=date.today, blank=True)
 
     class Meta:
         unique_together = ('template', 'status', 'planned_exec_date',)

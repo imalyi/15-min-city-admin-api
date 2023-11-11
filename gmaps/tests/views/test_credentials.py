@@ -15,13 +15,13 @@ class TestCredential(APITestCase):
         self.access_token = "Bearer " + str(RefreshToken.for_user(self.admin).access_token)
         self.credential = Credential.objects.create(name=self.name, token=self.token)
 
-    def test_get_authorised(self):
+    def test_list_credential_authorised(self):
         response = self.client.get(reverse('credential-list'), HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
         serialized_data = CredentialSerializer(self.credential).data
         self.assertEquals(response.data, [serialized_data])
 
-    def test_post_authorised(self):
+    def test_create_credential_authorised(self):
         name = 'test1'
         token = 'token2'
         response = self.client.post(reverse('credential-list'), data={'name': name, 'token': token}, HTTP_AUTHORIZATION=self.access_token)
@@ -39,7 +39,7 @@ class TestCredential(APITestCase):
         response = self.client.put(url, data={'name': 'new_name', 'token': "new_token"}, HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
 
-    def test_get_unauthorised(self):
+    def test_list_credential_unauthorised(self):
         url = reverse('credential-list')
         response = self.client.get(url)
         self.assertEquals(response.status_code, HTTP_401_UNAUTHORIZED)

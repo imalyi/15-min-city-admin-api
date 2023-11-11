@@ -23,15 +23,14 @@ class TestTaskTemplate(APITestCase):
         self.access_token = "Bearer " + str(RefreshToken.for_user(self.admin).access_token)
         self.template = create_task_template("place", "secret", "secret_name", "every day", "city", 12, 13)
 
-
-    def test_get_authorised(self):
+    def test_list_task_template_authorised(self):
         response = self.client.get(reverse('template-list'),
                                    HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
         serialized_data = TaskTemplateSerializer(self.template).data
         self.assertEquals(response.data, [serialized_data])
 
-    def test_post_authorised(self):
+    def test_create_task_template_authorised(self):
         TaskTemplate.objects.all().delete()
         data = {"place": 1,
                 "credentials": 1,
@@ -59,7 +58,7 @@ class TestTaskTemplate(APITestCase):
         response = self.client.put(url, data=data, HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
 
-    def test_get_unauthorised(self):
+    def test_list_task_template_unauthorised(self):
         url = reverse('template-list')
         response = self.client.get(url)
         self.assertEquals(response.status_code, HTTP_401_UNAUTHORIZED)

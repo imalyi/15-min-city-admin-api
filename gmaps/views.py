@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import viewsets
-from task_sender import get_task_sender
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer, TaskTemplateSerializer, TaskTemplateCreateSerializer
+from gmaps.serializers import TaskCreateSerializer
 from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task
 from rest_framework import status
 import functools
@@ -41,6 +41,8 @@ class TaskActionView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
 
+    http_method_names = ['get', 'post', 'delete']
+
     @action(detail=True, methods=['get'])
     @handle_task_action
     def stop(self, task, request, pk=None):
@@ -76,6 +78,11 @@ class TaskActionView(viewsets.ModelViewSet):
     @handle_task_action
     def track(self, task, request, pk=None):
         task.update_progress(request.data.get('progress', 0))
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return TaskCreateSerializer
+        return TaskSerializer
 
 
 class TaskTemplateView(viewsets.ModelViewSet):
