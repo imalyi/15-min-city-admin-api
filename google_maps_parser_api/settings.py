@@ -109,11 +109,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'users.NewUser'
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAdminUser',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
