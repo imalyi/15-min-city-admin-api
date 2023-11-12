@@ -63,8 +63,22 @@ class Credential(Model):
         return self.name
 
 
+class Category(Model):
+    value = CharField(max_length=250, unique=True)
+
+    def __json__(self):
+        return self.value
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+
 class PlaceType(Model):
     value = CharField(max_length=250, unique=True)
+    category = ForeignKey(Category, blank=True, null=True, default=None, on_delete=CASCADE)
 
     def __json__(self):
         return self.value
