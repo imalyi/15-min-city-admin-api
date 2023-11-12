@@ -8,6 +8,7 @@ class CredentialSerializer(ModelSerializer):
         model = Credential
         fields = '__all__'
 
+
 class PlaceTypeSerializer(ModelSerializer):
     category = StringRelatedField(source='category.value')
     class Meta:

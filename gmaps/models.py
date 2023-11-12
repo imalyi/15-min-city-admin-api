@@ -64,7 +64,7 @@ class Credential(Model):
 
 
 class Category(Model):
-    value = CharField(max_length=250, unique=True)
+    value = CharField(max_length=30)
 
     def __json__(self):
         return self.value

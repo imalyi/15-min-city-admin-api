@@ -62,15 +62,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'google_maps_parser_api.wsgi.application'
 
-if os.environ.get('API_DB_NAME'):
+if os.environ.get('API_DB_NAME', True):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('API_DB_NAME'),
-            'USER': os.environ.get('API_DB_USER'),
-            'PASSWORD': os.environ.get('API_DB_PASSWORD'),
-            'HOST': os.environ.get('API_DB_HOST'),
-            'PORT': os.environ.get('API_DB_PORT'),
+            'NAME': os.environ.get('API_DB_NAME', 'gmaps'),
+            'USER': os.environ.get('API_DB_USER', 'google_maps_parser_api'),
+            'PASSWORD': os.environ.get('API_DB_PASSWORD', 'gmaps'),
+            'HOST': os.environ.get('API_DB_HOST', '192.168.0.101'),
+            'PORT': os.environ.get('API_DB_PORT', '3306')
         }
     }
 else:
