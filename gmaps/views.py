@@ -45,12 +45,6 @@ class TaskActionView(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     @handle_task_action
-    def stop(self, task, request, pk=None):
-        task.stop()
-        return Response({'detail': f"Task {task} stopped"})
-
-    @action(detail=True, methods=['get'])
-    @handle_task_action
     def error(self, task, request, pk=None):
         task.change_status_to_error()
 

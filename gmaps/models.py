@@ -173,6 +173,7 @@ class Task(Model):
             self.finish = timezone.now()
         if IS_START_DATE_UPDATE_REQUIRED.get(target_status, False):
             self.start = timezone.now()
+        self.save()
 
     def change_status_to_stopped(self):
         self.change_status(STOPPED)

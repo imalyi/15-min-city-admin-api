@@ -32,7 +32,6 @@ class TestAction(TestCase):
     def test_status_change_methods(self):
         for status, next_statuses in POSSIBLE_STATUSES.items():
             for next_status in next_statuses:
-                # create subtask with proper start, finish properties for status
                 task = self.__create_task_with_status(status)
                 task.change_status(next_status)
                 self.assertEquals(task.status, next_status)
