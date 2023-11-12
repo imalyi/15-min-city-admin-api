@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, CharField, DateTimeField, DateField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField, DateField
 from gmaps.models import Credential, PlaceType, Coordinate, Task, TaskTemplate, Schedule, Category
 from django.db.utils import IntegrityError
 
@@ -8,15 +8,8 @@ class CredentialSerializer(ModelSerializer):
         model = Credential
         fields = '__all__'
 
-
-class CategorySerializer(ModelSerializer):
-    class Meta:
-        model = Category
-        fields = "value"
-
-
 class PlaceTypeSerializer(ModelSerializer):
-    category = CategorySerializer()
+    category = StringRelatedField(source='category.value')
     class Meta:
         model = PlaceType
         fields = "__all__"
