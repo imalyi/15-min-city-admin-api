@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import viewsets
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer, TaskTemplateSerializer, TaskTemplateCreateSerializer
-from gmaps.serializers import TaskCreateSerializer
-from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task
+from gmaps.serializers import TaskCreateSerializer, ScheduleSerializer
+from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task, Schedule
 from rest_framework import status
 import functools
 
@@ -87,3 +87,9 @@ class TaskTemplateView(viewsets.ModelViewSet):
         if self.action == 'create':
             return TaskTemplateCreateSerializer
         return TaskTemplateSerializer
+
+
+class ScheduleView(viewsets.ModelViewSet):
+    serializer_class = ScheduleSerializer
+    queryset = Schedule.objects.all()
+

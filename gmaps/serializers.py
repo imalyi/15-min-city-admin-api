@@ -24,7 +24,7 @@ class CoordinateSerializer(ModelSerializer):
 class ScheduleSerializer(ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ('name', )
+        fields = "__all__"
 
 
 class TaskTemplateSerializer(ModelSerializer):
@@ -72,3 +72,5 @@ class TaskCreateSerializer(ModelSerializer):
     class Meta:
         model = Task
         fields = "__all__"
+
+

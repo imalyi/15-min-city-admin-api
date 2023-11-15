@@ -31,8 +31,9 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('minute', 'hour', 'day_of_month')
-    
+    list_display = ('name', 'minute', 'hour', 'day_of_month')
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     pass
