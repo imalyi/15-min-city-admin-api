@@ -1,7 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
-from gmaps.models import Schedule
 from users.models import User
 from gmaps.serializers import ScheduleSerializer
 from rest_framework_simplejwt.tokens import RefreshToken

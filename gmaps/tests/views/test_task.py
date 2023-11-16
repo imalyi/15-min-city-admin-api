@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
-from gmaps.models import Task, TaskTemplate, Coordinate, PlaceType, Credential
+from gmaps.models import TaskResult, TaskTemplate, Coordinate, PlaceType, Credential
 from gmaps.serializers import TaskSerializer
 from users.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,7 +14,7 @@ class TestTask(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser('admin', 'admin')
         self.access_token = "Bearer " + str(RefreshToken.for_user(self.admin).access_token)
-        self.task = Task.objects.create(template=create_task_template("place", "secret", "secret_name", "every day", "city", 12, 13))
+        self.task = TaskResult.objects.create(template=create_task_template("place", "secret", "secret_name", "every day", "city", 12, 13))
 
     def test_list_task_authorised(self):
         response = self.client.get(reverse('task-list'), HTTP_AUTHORIZATION=self.access_token)
@@ -23,7 +23,7 @@ class TestTask(APITestCase):
         self.assertEquals(response.data, [serialized_data])
 
     def test_create_task_authorised(self):
-        Task.objects.all().delete()
+        TaskResult.objects.all().delete()
         template = create_task_template("place1", "secret", "secret_name", "every day", "city1", 12, 13)
 
         data = {"template": template.id,
@@ -31,7 +31,7 @@ class TestTask(APITestCase):
                 }
         response = self.client.post(reverse('task-list'), data=data, HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_201_CREATED)
-        self.assertIsInstance(Task.objects.get(template_id=template.id), Task)
+        self.assertIsInstance(TaskResult.objects.get(template_id=template.id), TaskResult)
 
     def test_retrieve_task_authorised(self):
         response = self.client.get(reverse('task-detail', str(self.task.id)), HTTP_AUTHORIZATION=self.access_token)
@@ -54,9 +54,9 @@ class TestTask(APITestCase):
         Credential.objects.all().delete()
         PlaceType.objects.all().delete()
         template = create_task_template("place4", "secret", "secret_name", "every day", "city", 12, 13)
-        Task.objects.all().delete()
+        TaskResult.objects.all().delete()
 
-        task = Task.objects.create(template=template, status=from_)
+        task = TaskResult.objects.create(template=template, status=from_)
         url = reverse("task-detail", args=[str(task.id)]) + STATUS_URL.get(to, to) + '/'
         response = self.client.get(url, HTTP_AUTHORIZATION=self.access_token)
         print(f"Changing status from {task.status} to {to}. Code: {response.status_code}. Url {url}")
@@ -84,15 +84,15 @@ class TestTask(APITestCase):
             self.__change_status(correct_from, correct_to, [HTTP_200_OK])
 
     def test_task_update_progress_authorised(self):
-        Task.objects.all().delete()
+        TaskResult.objects.all().delete()
         TaskTemplate.objects.all().delete()
         Coordinate.objects.all().delete()
         Credential.objects.all().delete()
         PlaceType.objects.all().delete()
         template = create_task_template("place4", "secret", "secret_name", "every day", "city", 12, 13)
-        task = Task.objects.create(template=template, status=RUNNING)
+        task = TaskResult.objects.create(template=template, status=RUNNING)
         url = reverse('task-detail', str(task.id)) + 'track/'
         response = self.client.post(url, data={'progress': 124}, HTTP_AUTHORIZATION=self.access_token)
-        updated_task = Task.objects.get(id=task.id)
+        updated_task = TaskResult.objects.get(id=task.id)
         self.assertEquals(response.status_code, HTTP_200_OK)
         self.assertEquals(updated_task.items_collected, 124)

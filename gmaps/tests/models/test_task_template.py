@@ -2,7 +2,7 @@ import datetime
 import json
 
 from google_maps_parser_api.settings import URL
-from gmaps.models import PlaceType, Coordinate, Task, TaskTemplate, Credential, Schedule
+from gmaps.models import PlaceType, Coordinate, TaskResult, TaskTemplate, Credential, Schedule
 from django.test import TestCase
 
 

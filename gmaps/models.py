@@ -1,12 +1,12 @@
 import json_fix
 from datetime import datetime
 from datetime import date
-from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE
+from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE, DurationField
 from rest_framework.reverse import reverse
 from status.TASK_STATUSES import *
 from google_maps_parser_api.settings import URL
 from django.utils import timezone
-
+from django_celery_beat.models import IntervalSchedule
 
 STATUS_URL = {
     STOPPED: 'stop',
@@ -112,24 +112,14 @@ class Coordinate(Model):
         return self.name
 
 
-class Schedule(Model):
-    name = CharField(max_length=250)
-    day_of_month = CharField(max_length=15, blank=True, null=True, default=None)
-    minute = CharField(max_length=15, blank=True, null=True, default=None)
-    hour = CharField(max_length=15, blank=True, null=True, default=None)
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return self.name
-
-
 class TaskTemplate(Model):
     credentials = ForeignKey(Credential, on_delete=CASCADE)
     coordinates = ForeignKey(Coordinate, on_delete=CASCADE)
     place = ForeignKey(PlaceType, on_delete=CASCADE)
-    schedule = ForeignKey(Schedule, on_delete=CASCADE)
+    schedule = ForeignKey(IntervalSchedule, on_delete=CASCADE, null=True, default=None, blank=True)
+
+    class Meta:
+        unique_together = ('credentials', 'coordinates', 'place')
 
     def __json__(self):
         return {'place': self.place,
@@ -144,7 +134,7 @@ class TaskTemplate(Model):
         return self.place.value
 
 
-class Task(Model):
+class TaskResult(Model):
     class InvalidStatusChange(Exception):
         pass
 
@@ -159,10 +149,6 @@ class Task(Model):
     finish = DateTimeField(null=True, default=None, blank=True)
     items_collected = IntegerField(default=0)
     status = CharField(choices=STATUS_CHOICES, default=WAITING, max_length=20)
-    planned_exec_date = DateField(default=date.today, blank=True)
-
-    class Meta:
-        unique_together = ('template', 'status', 'planned_exec_date',)
 
     def __json__(self):
         return {

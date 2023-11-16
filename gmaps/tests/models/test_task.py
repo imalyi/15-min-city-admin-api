@@ -4,7 +4,7 @@ from django.utils import timezone
 
 
 from google_maps_parser_api.settings import URL
-from gmaps.models import PlaceType, Coordinate, Task, TaskTemplate, Credential, Schedule
+from gmaps.models import PlaceType, Coordinate, TaskResult, TaskTemplate, Credential, Schedule
 from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR, STOPPED, SENT
 from django.test import TestCase
 
@@ -20,7 +20,7 @@ class TestAction(TestCase):
         self.task_template = TaskTemplate.objects.create(place=self.place, coordinates=self.coordinates, credentials=self.credentials, schedule=self.schedule)
 
     def __create_task_with_status(self, status):
-        task = Task.objects.create(template=self.task_template, status=status)
+        task = TaskResult.objects.create(template=self.task_template, status=status)
         task.save()
         if IS_FINISH_DATE_UPDATE_REQUIRED.get(status):
             task.finish = timezone.now()
@@ -46,7 +46,7 @@ class TestAction(TestCase):
             for new_status in statuses:
                 if new_status in POSSIBLE_STATUSES.get(task_status):
                     continue
-                with self.assertRaises(Task.InvalidStatusChange):
+                with self.assertRaises(TaskResult.InvalidStatusChange):
                     task.change_status(new_status)
 
     def test_update_progress(self):

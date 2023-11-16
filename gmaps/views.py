@@ -5,9 +5,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework import viewsets
 from gmaps.serializers import CredentialSerializer, PlaceTypeSerializer, CoordinateSerializer, TaskSerializer, TaskTemplateSerializer, TaskTemplateCreateSerializer
 from gmaps.serializers import TaskCreateSerializer, ScheduleSerializer
-from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, Task, Schedule
+from gmaps.models import Credential, PlaceType, Coordinate, TaskTemplate, TaskResult
 from rest_framework import status
 import functools
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 
 class CredentialView(viewsets.ModelViewSet):
@@ -32,16 +33,16 @@ def handle_task_action(view_func):
         try:
             view_func(self, task, request, pk)
             return Response({'detail': 'ok'})
-        except (Task.InvalidStatusChange, Task.InvalidProgressValue) as e:
+        except (TaskResult.InvalidStatusChange, TaskResult.InvalidProgressValue) as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return wrapper
 
 
 class TaskActionView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    queryset = Task.objects.all()
+    queryset = TaskResult.objects.all()
 
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post']
 
     @action(detail=True, methods=['get'])
     @handle_task_action
@@ -88,8 +89,22 @@ class TaskTemplateView(viewsets.ModelViewSet):
             return TaskTemplateCreateSerializer
         return TaskTemplateSerializer
 
+    def create(self, request, *args, **kwargs):
+        data = TaskTemplateCreateSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        data.save()
+
+        if data.data.get('schedule'):
+            PeriodicTask.objects.create(
+                name=TaskTemplate.objects.get(id=data.instance.id).place.value,
+                task='google_maps_parser_api.celery.send_task_to_collector',
+                interval_id=data.data.get('schedule'),
+                kwargs=json.dumps({"template_id": data.instance.id})
+            )
+        return Response(data.data)
+
 
 class ScheduleView(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
-    queryset = Schedule.objects.all()
+    queryset = IntervalSchedule.objects.all()
 
