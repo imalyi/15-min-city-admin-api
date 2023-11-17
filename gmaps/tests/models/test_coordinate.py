@@ -1,15 +1,8 @@
-import datetime
-import json
-
-from google_maps_parser_api.settings import URL
-from gmaps.models import PlaceType, Coordinate, TaskResult, TaskTemplate, Credential, Schedule
-from gmaps.models import WAITING, CANCELED, RUNNING, DONE, ERROR, STOPPED, SENT
+from gmaps.models import Coordinate
 from django.test import TestCase
 
-from gmaps.models import POSSIBLE_STATUSES, IS_START_DATE_UPDATE_REQUIRED, IS_FINISH_DATE_UPDATE_REQUIRED
 
-
-class TestAction(TestCase):
+class TestCoordinates(TestCase):
     def setUp(self):
         self.name = "name"
         self.lon = 123.1
@@ -22,6 +15,3 @@ class TestAction(TestCase):
 
     def test_repr_method(self):
         self.assertEquals(repr(self.coordinate), self.name)
-
-    def test_to_json(self):
-        self.assertEquals(json.dumps(self.coordinate), '{"name": "name", "lon": 123.1, "lat": 124.1, "radius": 1414}')

@@ -12,6 +12,7 @@ ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
+    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,12 +24,10 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'django_celery_beat',
     'django_celery_results',
     'google_maps_parser_api',
     'users',
     'gmaps',
-    'status'
 ]
 
 MIDDLEWARE = [
@@ -191,3 +190,12 @@ CACHES = {
 }
 
 CELERY_RESULT_EXTENDED = True
+
+
+MONGO_DB_USERNAME = os.environ.get('MONGO_DB_USERNAME')
+MONGO_DB_PASSWORD = os.environ.get('MONGO_DB_PASSWORD')
+MONGO_DB_HOST = os.environ.get('MONGO_DB_HOST')
+MONGO_DB_PORT = os.environ.get('MONGO_DB_PORT')
+MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
+
+MONGO_CONNECT = f"mongodb://{MONGO_DB_USERNAME}:{MONGO_DB_PASSWORD}@{MONGO_DB_HOST}:{MONGO_DB_PORT}"
