@@ -157,15 +157,15 @@ SIMPLE_JWT = {
 
 APPEND_SLASH = True
 
-PIKA_USERNAME = os.environ.get('PIKA_USERNAME', 'django_api')
-PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD', '343877')
-PIKA_HOST = os.environ.get('PIKA_HOST', 'localhost')
-PIKA_PORT = os.environ.get('PIKA_PORT', 5672)
+PIKA_USERNAME = os.environ.get('PIKA_USERNAME')
+PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD')
+PIKA_HOST = os.environ.get('PIKA_HOST')
+PIKA_PORT = os.environ.get('PIKA_PORT')
 
 
-CELERY_BROKER_URL = "amqp://django_api:343877@localhost:5672"
+CELERY_BROKER_URL = f"amqp://{PIKA_USERNAME}:{PIKA_PASSWORD}@{PIKA_HOST}:{PIKA_PORT}"
 
-CSRF_TRUSTED_ORIGINS=['https://15minadmin.1213213.xyz']
+CSRF_TRUSTED_ORIGINS = ['https://15minadmin.1213213.xyz']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -177,7 +177,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CORS_ORIGIN_ALLOW_ALL = True
 CELERY_BEAT_SCHEDULER = 'google_maps_parser_api.schedulers:DatabaseScheduler'
-CELERY_RESULT_BACKEND = 'django-db'
 
 CELERY_CACHE_BACKEND = 'default'
 

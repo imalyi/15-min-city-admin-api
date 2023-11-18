@@ -41,8 +41,8 @@ IS_START_DATE_UPDATE_REQUIRED = {
 
 
 class Credential(Model):
-    token = CharField(max_length=560)
-    name = CharField(max_length=500)
+    token = CharField(max_length=40)
+    name = CharField(max_length=250)
 
     class Meta:
         unique_together = ('token', 'name')

@@ -30,6 +30,7 @@ class Response:
 
         logger.debug(f"Creating Request {str(self)}")
         self.task_progress = task_progress
+        self.task_progress.change_status_to_running()
 
     def _create_gmaps_client(self):
         try:
@@ -71,7 +72,6 @@ class Response:
 
     def __collect_all(self):
         try:
-            self.task_progress.change_status_to_running()
             self._create_gmaps_client()
             self._make_request()
             while self._next_page:

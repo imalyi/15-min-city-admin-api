@@ -14,7 +14,8 @@ app.autodiscover_tasks()
 
 @app.task
 def send_task_to_collector(task_id: int, gmaps_token: str, type_: str, location: tuple[float, float], radius: int):
-    from gmaps.models import TaskResult
+    from gmaps.models import TaskResult, Task
     task_result = TaskResult.objects.create(task_id=task_id)
+    task_result.save()
     collector = Collector(task_result, gmaps_token, type_, location, radius)
     return collector.collect()
