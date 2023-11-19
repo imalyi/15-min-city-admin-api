@@ -197,4 +197,14 @@ MONGO_DB_HOST = os.environ.get('MONGO_DB_HOST')
 MONGO_DB_PORT = os.environ.get('MONGO_DB_PORT')
 MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
 
+
+#MONGO_DB_USERNAME = 'gmaps'
+#MONGO_DB_NAME = 'gmaps'
+#MONGO_DB_PASSWORD = 'gmaps'
+#MONGO_DB_HOST = 'localhost'
+#MONGO_DB_PORT = 28017
+
+
+
+
 MONGO_CONNECT = f"mongodb://{MONGO_DB_USERNAME}:{MONGO_DB_PASSWORD}@{MONGO_DB_HOST}:{MONGO_DB_PORT}"

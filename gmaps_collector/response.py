@@ -1,10 +1,10 @@
 import logging
 import time
 from datetime import datetime, timezone
-
 import googlemaps
+
 logger = logging.getLogger(f"{__name__}_Request")
-SLEEP = 10
+SLEEP = 3
 
 
 def generate_date():

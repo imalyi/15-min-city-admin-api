@@ -1,0 +1,114 @@
+version: "3.3"
+services:
+    rabbitmq:
+        container_name: "rabbitmq"
+        image: rabbitmq:3.8-management-alpine
+        environment:
+            - RABBITMQ_DEFAULT_USER=django_api
+            - RABBITMQ_DEFAULT_PASS=343877
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+
+    api:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api
+        environment:
+            - PIKA_USERNAME=django_api
+            - PIKA_PASSWORD=343877
+            - PIKA_HOST=rabbitmq
+            - PIKA_PORT=5672
+            - API_DB_NAME=gmaps
+            - API_DB_USER=gmaps
+            - API_DB_PASSWORD=gmaps
+            - API_DB_HOST=db
+            - API_DB_PORT=3306
+            - MONGO_DB_PASSWORD=gmaps
+            - MONGO_DB_HOST=mongo
+            - MONGO_DB_PORT=27017
+            - MONGO_DB_NAME=gmaps
+            - MONGO_DB_USERNAME=gmaps
+        command: ./start.sh
+        ports:
+            - "8081:8000"
+
+    celerybeats:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api_celery_beats
+        environment:
+            - PIKA_USERNAME=django_api
+            - PIKA_PASSWORD=343877
+            - PIKA_HOST=rabbitmq
+            - PIKA_PORT=5672
+            - API_DB_NAME=gmaps
+            - API_DB_USER=gmaps
+            - API_DB_PASSWORD=gmaps
+            - API_DB_HOST=db
+            - API_DB_PORT=3306
+            - MONGO_DB_PASSWORD=gmaps
+            - MONGO_DB_HOST=mongo
+            - MONGO_DB_PORT=27017
+            - MONGO_DB_NAME=gmaps
+            - MONGO_DB_USERNAME=gmaps
+        command: celery -A google_maps_parser_api beat --loglevel=info
+        depends_on:
+            - rabbitmq
+            - api
+
+    worker:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api_celery_worker
+        environment:
+            - PIKA_USERNAME=django_api
+            - PIKA_PASSWORD=343877
+            - PIKA_HOST=rabbitmq
+            - PIKA_PORT=5672
+            - API_DB_NAME=gmaps
+            - API_DB_USER=gmaps
+            - API_DB_PASSWORD=gmaps
+            - API_DB_HOST=db
+            - API_DB_PORT=3306
+            - MONGO_DB_PASSWORD=gmaps
+            - MONGO_DB_HOST=mongo
+            - MONGO_DB_PORT=27017
+            - MONGO_DB_NAME=gmaps
+            - MONGO_DB_USERNAME=gmaps
+        command: celery -A google_maps_parser_api worker --loglevel=info
+        depends_on:
+            - api
+            - rabbitmq
+
+    db:
+        image: mysql:8.2.0
+        container_name: "db"
+        restart: always
+        environment:
+            MYSQL_DATABASE: gmaps
+            MYSQL_USER: gmaps
+            MYSQL_PASSWORD: gmaps
+            MYSQL_ROOT_PASSWORD: gmaps
+        ports:
+            - '3306:3306'
+        volumes:
+            - .data/15min/api_db:/var/lib/mysql
+
+    mongo:
+        image: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: gmaps
+            MONGO_INITDB_ROOT_PASSWORD: gmaps
+        ports:
+            - "28017:27017"
+        volumes:
+            - ".data/15min/gmaps_data/:/data/db/"
+
+    mongo-express:
+        image: mongo-express
+        restart: always
+        ports:
+            - "28018:8081"
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: gmaps
+            ME_CONFIG_MONGODB_ADMINPASSWORD: gmaps
+            ME_CONFIG_MONGODB_URL: mongodb://gmaps:gmaps@mongo:27017/

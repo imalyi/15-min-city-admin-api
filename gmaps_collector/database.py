@@ -4,9 +4,11 @@ from abc import ABC
 
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
+from google_maps_parser_api.settings import MONGO_CONNECT, MONGO_DB_NAME, MONGO_DB_HOST
+
 
 logger = logging.getLogger(f"{__name__}_Database")
-from google_maps_parser_api.settings import MONGO_CONNECT, MONGO_DB_NAME, MONGO_DB_HOST
+
 
 class Database(ABC):
     @abc.abstractmethod
@@ -14,9 +16,12 @@ class Database(ABC):
         pass
 
 
-class DummyDatabase(Database):
+class ConsoleDataBase(Database):
     def add_item(self, item):
-        print(item)
+        print(f"{str(self)}: {item}")
+
+    def __str__(self):
+        return "ConsoleDataBase"
 
 
 class MongoDatabase(Database):
@@ -36,9 +41,14 @@ class MongoDatabase(Database):
         except DuplicateKeyError:
             logger.debug(f"Document exist in db")
 
+    def __str__(self):
+        return "MongoDB"
+
 
 def get_database() -> Database:
     if MONGO_DB_HOST is None:
-        return DummyDatabase()
+        obj = ConsoleDataBase()
     else:
-        return MongoDatabase()
+        obj = MongoDatabase()
+    print(f"Database: {obj}")
+    return obj
