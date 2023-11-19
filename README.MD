@@ -8,7 +8,7 @@ python3 -m pip install -r requirements.txt
 ```
 python3 -m coverage run manage.py test
 python3 -m coverage report
-python3  -m coverage html
+python3 -m coverage html
 ```
 
 ### Wykonać migracje i uruchomić
