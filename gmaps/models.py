@@ -117,7 +117,10 @@ class Task(Model):
 
     @property
     def last_status(self):
-        return TaskResult.objects.filter(task=self).order_by('-finish').first()
+        try:
+            return TaskResult.objects.filter(task=self).order_by('-finish').first().status
+        except AttributeError:
+            return None
 
     def __repr__(self):
         return self.place.value

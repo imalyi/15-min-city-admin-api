@@ -10,7 +10,21 @@ class CredentialSerializer(ModelSerializer):
 
 
 class PlaceTypeSerializer(ModelSerializer):
-    category = StringRelatedField(source='category.value')
+    class Meta:
+        fields = ("id", "value", )
+        model = PlaceType
+
+
+class CategoryPlaceSerializer(ModelSerializer):
+    places = PlaceTypeSerializer(many=True, read_only=True)
+
+    def to_representation(self, instance):
+        category_representation = super().to_representation(instance)
+        places = PlaceType.objects.filter(category_id=instance.id)
+        places_serialized = PlaceTypeSerializer(places, many=True).data
+        return {"category_name": category_representation['value'], "places": places_serialized}
+
+
 
     class Meta:
         model = PlaceType
@@ -26,6 +40,12 @@ class CoordinateSerializer(ModelSerializer):
 class ScheduleSerializer(ModelSerializer):
     class Meta:
         model = IntervalSchedule
+        fields = "__all__"
+
+
+class PlaceTypeSerializer(ModelSerializer):
+    class Meta:
+        model = PlaceType
         fields = "__all__"
 
 

@@ -1,5 +1,5 @@
 from django.urls import path
-from gmaps.views import CredentialView, PlaceTypeView, CoordinatesView, TaskView, TaskResult, ScheduleView
+from gmaps.views import CredentialView, PlaceTypeView, CoordinatesView, TaskView, ScheduleView, TaskResultView
 from rest_framework import routers
 
 
@@ -12,5 +12,5 @@ router.register('schedule', ScheduleView, basename='schedule')
 
 urlpatterns = [
     path('coordinates/', CoordinatesView.as_view()),
-    path('result/', TaskResult.as_view(), name='result')
+    path('result/', TaskResultView.as_view(), name='result')
 ] + router.urls

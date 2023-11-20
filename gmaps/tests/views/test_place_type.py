@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
 from gmaps.models import PlaceType
-from gmaps.serializers import PlaceTypeSerializer
+from gmaps.serializers import CategoryPlaceSerializer
 from users.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -16,7 +16,7 @@ class TestPlaceType(APITestCase):
     def test_list_place_type_authorised(self):
         response = self.client.get(reverse('place-list'), HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
-        serialized_data = PlaceTypeSerializer(self.place).data
+        serialized_data = CategoryPlaceSerializer(self.place).data
         self.assertEquals(response.data, [serialized_data])
 
     def test_create_place_type_authorised(self):
@@ -28,7 +28,7 @@ class TestPlaceType(APITestCase):
     def test_retrieve_place_type_authorised(self):
         response = self.client.get(reverse('place-detail', str(self.place.id)), HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
-        serialized_data = PlaceTypeSerializer(self.place).data
+        serialized_data = CategoryPlaceSerializer(self.place).data
         self.assertEquals(response.data, serialized_data)
 
     def test_update_place_type_authorised(self):
