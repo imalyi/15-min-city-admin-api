@@ -84,7 +84,8 @@ class Response:
         if not self._data:
             self.__collect_all()
         if self._current < len(self._data) - 1:
-            self._current += 1
             self._data[self._current]['collected_date'] = generate_date()
-            return self._data[self._current]
+            current = self._data[self._current]
+            self._current += 1
+            return current
         raise StopIteration

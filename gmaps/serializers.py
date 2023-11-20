@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField, DateField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField
 from gmaps.models import Credential, PlaceType, Coordinate, TaskResult, Task, Category
 from django_celery_beat.models import IntervalSchedule
 
@@ -61,7 +61,6 @@ class TaskResultSerializer(ModelSerializer):
     status = CharField(read_only=True)
     start = DateTimeField(read_only=True)
     finish = DateTimeField(read_only=True)
-    planned_exec_date = DateField(read_only=True)
 
     class Meta:
         model = TaskResult

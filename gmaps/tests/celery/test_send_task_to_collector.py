@@ -28,7 +28,7 @@ class TestCeleryTasks(TestCase):
         send_task_to_collector(self.task.id, self.task.credentials.token, self.task.place.value,
                                (self.task.coordinates.lat, self.task.coordinates.lon), self.task.coordinates.radius)
         task_result = TaskResult.objects.get(task=self.task)
-        self.assertGreaterEqual(task_result.items_collected, 1)
+        self.assertEquals(task_result.items_collected, 60)
         self.assertEquals(task_result.error, None)
         self.assertNotEquals(task_result.start, None)
         self.assertNotEquals(task_result.finish, None)

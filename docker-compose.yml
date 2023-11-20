@@ -9,84 +9,53 @@ services:
         ports:
             - '5672:5672'
             - '15672:15672'
+        restart: unless-stopped
 
     api:
         image: malyyigor34/15_min_google_maps_parser_api:v1
         container_name: api
-        environment:
-            - PIKA_USERNAME=django_api
-            - PIKA_PASSWORD=343877
-            - PIKA_HOST=rabbitmq
-            - PIKA_PORT=5672
-            - API_DB_NAME=gmaps
-            - API_DB_USER=gmaps
-            - API_DB_PASSWORD=gmaps
-            - API_DB_HOST=db
-            - API_DB_PORT=3306
-            - MONGO_DB_PASSWORD=gmaps
-            - MONGO_DB_HOST=mongo
-            - MONGO_DB_PORT=27017
-            - MONGO_DB_NAME=gmaps
-            - MONGO_DB_USERNAME=gmaps
+        env_file:
+            - stack.env
         command: ./start.sh
         ports:
             - "8081:8000"
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_started
+            mongo:
+                condition: service_started
+            celerybeats:
+                condition: service_started
+            worker:
+                condition: service_started
 
     celerybeats:
         image: malyyigor34/15_min_google_maps_parser_api:v1
         container_name: api_celery_beats
-        environment:
-            - PIKA_USERNAME=django_api
-            - PIKA_PASSWORD=343877
-            - PIKA_HOST=rabbitmq
-            - PIKA_PORT=5672
-            - API_DB_NAME=gmaps
-            - API_DB_USER=gmaps
-            - API_DB_PASSWORD=gmaps
-            - API_DB_HOST=db
-            - API_DB_PORT=3306
-            - MONGO_DB_PASSWORD=gmaps
-            - MONGO_DB_HOST=mongo
-            - MONGO_DB_PORT=27017
-            - MONGO_DB_NAME=gmaps
-            - MONGO_DB_USERNAME=gmaps
+        env_file:
+            - stack.env
         command: celery -A google_maps_parser_api beat --loglevel=info
         depends_on:
             - rabbitmq
-            - api
+        restart: unless-stopped
 
     worker:
         image: malyyigor34/15_min_google_maps_parser_api:v1
         container_name: api_celery_worker
-        environment:
-            - PIKA_USERNAME=django_api
-            - PIKA_PASSWORD=343877
-            - PIKA_HOST=rabbitmq
-            - PIKA_PORT=5672
-            - API_DB_NAME=gmaps
-            - API_DB_USER=gmaps
-            - API_DB_PASSWORD=gmaps
-            - API_DB_HOST=db
-            - API_DB_PORT=3306
-            - MONGO_DB_PASSWORD=gmaps
-            - MONGO_DB_HOST=mongo
-            - MONGO_DB_PORT=27017
-            - MONGO_DB_NAME=gmaps
-            - MONGO_DB_USERNAME=gmaps
+        env_file:
+            - stack.env
         command: celery -A google_maps_parser_api worker --loglevel=info
         depends_on:
-            - api
             - rabbitmq
+        restart: unless-stopped
 
     db:
         image: mysql:8.2.0
         container_name: "db"
-        restart: always
-        environment:
-            MYSQL_DATABASE: gmaps
-            MYSQL_USER: gmaps
-            MYSQL_PASSWORD: gmaps
-            MYSQL_ROOT_PASSWORD: gmaps
+        restart: unless-stopped
+        env_file:
+            - stack.env
         ports:
             - '3306:3306'
         volumes:
@@ -94,21 +63,20 @@ services:
 
     mongo:
         image: mongo
-        restart: always
+        restart: unless-stopped
         environment:
-            MONGO_INITDB_ROOT_USERNAME: gmaps
-            MONGO_INITDB_ROOT_PASSWORD: gmaps
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
         ports:
             - "28017:27017"
         volumes:
             - ".data/15min/gmaps_data/:/data/db/"
 
-    mongo-express:
-        image: mongo-express
-        restart: always
+    webadmin:
+        image: malyyigor34/15_min_google_maps_admin_ui:v1
+        restart: unless-stopped
         ports:
-            - "28018:8081"
-        environment:
-            ME_CONFIG_MONGODB_ADMINUSERNAME: gmaps
-            ME_CONFIG_MONGODB_ADMINPASSWORD: gmaps
-            ME_CONFIG_MONGODB_URL: mongodb://gmaps:gmaps@mongo:27017/
+            - "8097:3000"
+        depends_on:
+            api:
+                condition: service_started
