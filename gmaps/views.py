@@ -19,6 +19,7 @@ class PlaceTypeView(viewsets.ModelViewSet):
     serializer_class = CategoryPlaceSerializer
     queryset = Category.objects.all()
 
+
 class CoordinatesView(ListCreateAPIView):
     serializer_class = CoordinateSerializer
     queryset = Coordinate.objects.all()

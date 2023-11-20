@@ -43,7 +43,14 @@ class ScheduleSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class CategorySerializer(ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
+
+
 class PlaceTypeSerializer(ModelSerializer):
+    category = CategorySerializer()
     class Meta:
         model = PlaceType
         fields = "__all__"
