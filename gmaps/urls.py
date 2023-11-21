@@ -12,5 +12,5 @@ router.register('schedule', ScheduleView, basename='schedule')
 
 urlpatterns = [
     path('coordinates/', CoordinatesView.as_view()),
-    path('result/', TaskResultView.as_view(), name='result')
+    path('result/<int:task_id>', TaskResultView.as_view()),
 ] + router.urls
