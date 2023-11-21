@@ -136,7 +136,7 @@ class Task(Model):
 
     @property
     def actions(self):
-        return URL + reverse("task-detail", args=[self.id]) + 'start/'
+        return {"start:": URL + reverse("task-detail", args=[self.id]) + 'start/'}
 
     def __repr__(self):
         return self.place.value
