@@ -1,11 +1,12 @@
 import json
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-
+from rest_framework.reverse import reverse, reverse_lazy
 from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE, DurationField, Manager
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django.db import transaction
+from google_maps_parser_api.settings import URL
 
 WAITING = 'waiting'
 RUNNING = 'running'
@@ -132,6 +133,10 @@ class Task(Model):
             return TaskResult.objects.filter(task=self).order_by('-finish').first().status
         except AttributeError:
             return None
+
+    @property
+    def actions(self):
+        return URL + reverse("task-detail", args=[self.id]) + 'start/'
 
     def __repr__(self):
         return self.place.value
