@@ -62,10 +62,14 @@ class TaskSerializer(ModelSerializer):
     coordinates = CoordinateSerializer()
     schedule = ScheduleSerializer()
     last_status = SerializerMethodField()
+    actions = SerializerMethodField()
+
+    def get_actions(self, obj):
+        return obj.actions
 
     class Meta:
         model = Task
-        fields = ("place", "credentials", "coordinates", "schedule", "id", "last_status")
+        fields = "__all__"
 
     def get_last_status(self, obj):
         return obj.last_status

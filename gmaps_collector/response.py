@@ -58,8 +58,8 @@ class Response:
             error = f"Request timeout error. Check api limit {str(self)}"
             logger.error(error)
             raise GmapsAPIError(error)
-        except googlemaps.exceptions.ApiError:
-            error = f"Request api error {str(self)}"
+        except googlemaps.exceptions.ApiError as err:
+            error = f"Request api error: {str(err)}  With Request: {str(self)}"
             logger.error(error)
             raise GmapsAPIError(error)
 
