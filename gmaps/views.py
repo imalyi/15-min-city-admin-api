@@ -1,6 +1,6 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework import viewsets
 from gmaps.serializers import CredentialSerializer, CategoryPlaceSerializer, CoordinateSerializer, TaskResultSerializer, TaskSerializer, TaskCreateSerializer
 from gmaps.serializers import TaskCreateSerializer, ScheduleSerializer
@@ -25,13 +25,6 @@ class CoordinatesView(ListCreateAPIView):
     queryset = Coordinate.objects.all()
 
 
-class TaskResultView(ListAPIView):
-    serializer_class = TaskResultSerializer
-    queryset = TaskResult.objects.all()
-
-    http_method_names = ['get']
-
-
 class TaskView(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
@@ -45,3 +38,12 @@ class TaskView(viewsets.ModelViewSet):
 class ScheduleView(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
     queryset = IntervalSchedule.objects.all()
+
+
+class TaskResultView(ListAPIView):
+    serializer_class = TaskResultSerializer
+    lookup_field = "task_id"
+
+    def get_queryset(self):
+        task_id = self.kwargs.get(self.lookup_field)
+        return TaskResult.objects.filter(task_id=task_id)

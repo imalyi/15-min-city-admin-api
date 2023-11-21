@@ -92,3 +92,20 @@ class TaskResultSerializer(ModelSerializer):
     class Meta:
         model = TaskResult
         fields = "__all__"
+
+
+class TaskResultSerializer(ModelSerializer):
+    task = TaskSerializer()
+    items_collected = IntegerField(read_only=True)
+    status = CharField(read_only=True)
+    start = DateTimeField(read_only=True)
+    finish = DateTimeField(read_only=True)
+
+    class Meta:
+        model = TaskResult
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['task'] = instance.task.place.value
+        return representation
