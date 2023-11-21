@@ -1,27 +1,29 @@
-import json_fix
-from datetime import datetime
-from datetime import date
-from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE
-from rest_framework.reverse import reverse
-from status.TASK_STATUSES import *
-from google_maps_parser_api.settings import URL
+import json
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+
+from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE, DurationField, Manager
 from django.utils import timezone
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django.db import transaction
 
+WAITING = 'waiting'
+RUNNING = 'running'
+DONE = 'done'
+ERROR = 'error'
 
-STATUS_URL = {
-    STOPPED: 'stop',
-    CANCELED: 'cancel',
-
-}
+STATUS_CHOICES = (
+    (WAITING, WAITING),
+    (RUNNING, RUNNING),
+    (DONE, DONE),
+    (ERROR, ERROR)
+)
 
 POSSIBLE_STATUSES = {
-    WAITING: [CANCELED, SENT],
-    SENT: [RUNNING, CANCELED],
-    RUNNING: [ERROR, STOPPED, DONE],
+    WAITING: [RUNNING],
+    RUNNING: [ERROR, DONE],
     DONE: [],
     ERROR: [],
-    STOPPED: [],
-    CANCELED: []
 }
 
 
@@ -30,9 +32,6 @@ IS_FINISH_DATE_UPDATE_REQUIRED = {
     RUNNING: False,
     DONE: True,
     ERROR: True,
-    STOPPED: True,
-    CANCELED: True,
-    SENT: False
 }
 
 IS_START_DATE_UPDATE_REQUIRED = {
@@ -40,21 +39,28 @@ IS_START_DATE_UPDATE_REQUIRED = {
     RUNNING: True,
     DONE: False,
     ERROR: False,
-    STOPPED: False,
-    CANCELED: False,
-    SENT: False
 }
 
 
 class Credential(Model):
-    token = CharField(max_length=560)
-    name = CharField(max_length=500)
+    token = CharField(max_length=40)
+    name = CharField(max_length=250)
 
     class Meta:
         unique_together = ('token', 'name')
 
-    def __json__(self):
-        return self.token
+    def save(self, *args, **kwargs):
+        super(Credential, self).save(*args, **kwargs)
+        try:
+            task_with_this_credentials = Task.objects.filter(credentials=self)
+            for task in task_with_this_credentials:
+                periodic_task = PeriodicTask.objects.get(name=task.place.value)
+                old_periodic_task_args = json.loads(periodic_task.args)
+                old_periodic_task_args[1] = self.token
+                periodic_task.args = json.dumps(old_periodic_task_args)
+                periodic_task.save()
+        except Task.DoesNotExist:
+            return
 
     def __repr__(self):
         return self.name
@@ -66,9 +72,6 @@ class Credential(Model):
 class Category(Model):
     value = CharField(max_length=250, unique=True)
 
-    def __json__(self):
-        return self.value
-
     def __str__(self):
         return self.value
 
@@ -79,9 +82,6 @@ class Category(Model):
 class PlaceType(Model):
     value = CharField(max_length=250, unique=True)
     category = ForeignKey(Category, blank=True, null=True, default=None, on_delete=CASCADE)
-
-    def __json__(self):
-        return self.value
 
     def __str__(self):
         return self.value
@@ -96,12 +96,6 @@ class Coordinate(Model):
     lat = FloatField()
     radius = IntegerField(default=10000)
 
-    def __json__(self):
-        return {'name': self.name,
-                'lon': self.lon,
-                'lat': self.lat,
-                'radius': self.radius}
-
     class Meta:
         unique_together = ('name', 'lon', 'lat', 'radius', )
 
@@ -112,30 +106,32 @@ class Coordinate(Model):
         return self.name
 
 
-class Schedule(Model):
-    name = CharField(max_length=250)
-    day_of_month = CharField(max_length=15, blank=True, null=True, default=None)
-    minute = CharField(max_length=15, blank=True, null=True, default=None)
-    hour = CharField(max_length=15, blank=True, null=True, default=None)
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return self.name
-
-
-class TaskTemplate(Model):
+class Task(Model):
     credentials = ForeignKey(Credential, on_delete=CASCADE)
     coordinates = ForeignKey(Coordinate, on_delete=CASCADE)
-    place = ForeignKey(PlaceType, on_delete=CASCADE)
-    schedule = ForeignKey(Schedule, on_delete=CASCADE)
+    place = ForeignKey(PlaceType, on_delete=CASCADE, unique=True)
+    schedule = ForeignKey(IntervalSchedule, on_delete=CASCADE)
 
-    def __json__(self):
-        return {'place': self.place,
-                'coordinates': self.coordinates,
-                'token': self.credentials
-                }
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            super(Task, self).save(*args, **kwargs)
+            PeriodicTask.objects.create(
+                name=self.place,
+                task="google_maps_parser_api.celery.send_task_to_collector",
+                interval_id=self.schedule.id,
+                args=json.dumps([self.pk, self.credentials.token,
+                                 self.place.value,
+                                 (self.coordinates.lat, self.coordinates.lon),
+                                 self.coordinates.radius])
+            )
+
+
+    @property
+    def last_status(self):
+        try:
+            return TaskResult.objects.filter(task=self).order_by('-finish').first().status
+        except AttributeError:
+            return None
 
     def __repr__(self):
         return self.place.value
@@ -144,7 +140,12 @@ class TaskTemplate(Model):
         return self.place.value
 
 
-class Task(Model):
+@receiver(post_delete, sender=Task)
+def delete_all_periodic_task_for_task(sender, instance, **kwargs):
+    PeriodicTask.objects.get(name=instance.place.value).delete()
+
+
+class TaskResult(Model):
     class InvalidStatusChange(Exception):
         pass
 
@@ -154,29 +155,12 @@ class Task(Model):
     class InvalidProgressValue(Exception):
         pass
 
-    template = ForeignKey(TaskTemplate, on_delete=CASCADE)
+    task = ForeignKey(Task, on_delete=CASCADE)
     start = DateTimeField(null=True, default=None, blank=True)
     finish = DateTimeField(null=True, default=None, blank=True)
     items_collected = IntegerField(default=0)
     status = CharField(choices=STATUS_CHOICES, default=WAITING, max_length=20)
-    planned_exec_date = DateField(default=date.today, blank=True)
-
-    class Meta:
-        unique_together = ('template', 'status', 'planned_exec_date',)
-
-    def __json__(self):
-        return {
-            'template': self.template,
-            'id': self.pk,
-        }
-
-    @property
-    def actions(self):
-        res = {}
-        for possible_status in POSSIBLE_STATUSES.get(self.status):
-            if STATUS_URL.get(possible_status):
-                res[STATUS_URL.get(possible_status)] = URL + reverse('task-detail', str(self.pk)) + STATUS_URL.get(possible_status)
-        return res
+    error = CharField(max_length=2600, default=None, blank=True, null=True)
 
     def change_status(self, target_status):
         if target_status in POSSIBLE_STATUSES.get(self.status):
@@ -189,10 +173,8 @@ class Task(Model):
             self.start = timezone.now()
         self.save()
 
-    def change_status_to_stopped(self):
-        self.change_status(STOPPED)
-
-    def change_status_to_error(self):
+    def change_status_to_error(self, error=''):
+        self.error = error
         self.change_status(ERROR)
 
     def change_status_to_running(self):
@@ -200,12 +182,6 @@ class Task(Model):
 
     def change_status_to_done(self):
         self.change_status(DONE)
-
-    def change_status_to_canceled(self):
-        self.change_status(CANCELED)
-
-    def change_status_to_sent(self):
-        self.change_status(SENT)
 
     def update_progress(self, progress):
         try:

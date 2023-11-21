@@ -1,6 +1,6 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField, DateField
-from gmaps.models import Credential, PlaceType, Coordinate, Task, TaskTemplate, Schedule, Category
-from django.db.utils import IntegrityError
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField
+from gmaps.models import Credential, PlaceType, Coordinate, TaskResult, Task, Category
+from django_celery_beat.models import IntervalSchedule
 
 
 class CredentialSerializer(ModelSerializer):
@@ -8,8 +8,24 @@ class CredentialSerializer(ModelSerializer):
         model = Credential
         fields = '__all__'
 
+
 class PlaceTypeSerializer(ModelSerializer):
-    category = StringRelatedField(source='category.value')
+    class Meta:
+        fields = ("id", "value", )
+        model = PlaceType
+
+
+class CategoryPlaceSerializer(ModelSerializer):
+    places = PlaceTypeSerializer(many=True, read_only=True)
+
+    def to_representation(self, instance):
+        category_representation = super().to_representation(instance)
+        places = PlaceType.objects.filter(category_id=instance.id)
+        places_serialized = PlaceTypeSerializer(places, many=True).data
+        return {"category_name": category_representation['value'], "places": places_serialized}
+
+
+
     class Meta:
         model = PlaceType
         fields = "__all__"
@@ -23,52 +39,56 @@ class CoordinateSerializer(ModelSerializer):
 
 class ScheduleSerializer(ModelSerializer):
     class Meta:
-        model = Schedule
-        fields = ('name', )
+        model = IntervalSchedule
+        fields = "__all__"
 
 
-class TaskTemplateSerializer(ModelSerializer):
-    place = PlaceTypeSerializer()
-    credentials = CredentialSerializer()
-    coordinates = CoordinateSerializer()
-    schedule = ScheduleSerializer()
-
+class CategorySerializer(ModelSerializer):
     class Meta:
-        model = TaskTemplate
-        fields = ("place", "credentials", "coordinates", "schedule", "id")
+        model = Category
+        fields = "__all__"
 
 
-class TaskTemplateCreateSerializer(ModelSerializer):
-    place = PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
-    credentials = PrimaryKeyRelatedField(queryset=Credential.objects.all())
-    coordinates = PrimaryKeyRelatedField(queryset=Coordinate.objects.all())
-    schedule = PrimaryKeyRelatedField(queryset=Schedule.objects.all())
-
+class PlaceTypeSerializer(ModelSerializer):
+    category = CategorySerializer()
     class Meta:
-        model = TaskTemplate
+        model = PlaceType
         fields = "__all__"
 
 
 class TaskSerializer(ModelSerializer):
-    template = TaskTemplateSerializer()
-    actions = SerializerMethodField()
-    items_collected = IntegerField(read_only=True)
-    status = CharField(read_only=True)
-    start = DateTimeField(read_only=True)
-    finish = DateTimeField(read_only=True)
-    planned_exec_date = DateField(read_only=True)
-    
-    def get_actions(self, obj):
-        return obj.actions
+    place = PlaceTypeSerializer()
+    credentials = CredentialSerializer()
+    coordinates = CoordinateSerializer()
+    schedule = ScheduleSerializer()
+    last_status = SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ("place", "credentials", "coordinates", "schedule", "id", "last_status")
+
+    def get_last_status(self, obj):
+        return obj.last_status
+
+
+class TaskCreateSerializer(ModelSerializer):
+    place = PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
+    credentials = PrimaryKeyRelatedField(queryset=Credential.objects.all())
+    coordinates = PrimaryKeyRelatedField(queryset=Coordinate.objects.all())
+    schedule = PrimaryKeyRelatedField(queryset=IntervalSchedule.objects.all())
 
     class Meta:
         model = Task
         fields = "__all__"
 
 
-class TaskCreateSerializer(ModelSerializer):
-    template = PrimaryKeyRelatedField(queryset=TaskTemplate.objects.all())
+class TaskResultSerializer(ModelSerializer):
+    task = TaskSerializer()
+    items_collected = IntegerField(read_only=True)
+    status = CharField(read_only=True)
+    start = DateTimeField(read_only=True)
+    finish = DateTimeField(read_only=True)
 
     class Meta:
-        model = Task
+        model = TaskResult
         fields = "__all__"

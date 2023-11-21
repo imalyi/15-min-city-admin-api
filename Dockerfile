@@ -20,4 +20,4 @@ EXPOSE 8000
 
 
 RUN chmod +x /home/apps/google_maps_parser_api/start.sh
-ENTRYPOINT ["./start.sh"]
+CMD ["./start.sh"]

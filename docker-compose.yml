@@ -1,0 +1,82 @@
+version: "3.3"
+services:
+    rabbitmq:
+        container_name: "rabbitmq"
+        image: rabbitmq:3.8-management-alpine
+        environment:
+            - RABBITMQ_DEFAULT_USER=django_api
+            - RABBITMQ_DEFAULT_PASS=343877
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        restart: unless-stopped
+
+    api:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api
+        env_file:
+            - stack.env
+        command: ./start.sh
+        ports:
+            - "8081:8000"
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_started
+            mongo:
+                condition: service_started
+            celerybeats:
+                condition: service_started
+            worker:
+                condition: service_started
+
+    celerybeats:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api_celery_beats
+        env_file:
+            - stack.env
+        command: celery -A google_maps_parser_api beat --loglevel=info
+        depends_on:
+            - rabbitmq
+        restart: unless-stopped
+
+    worker:
+        image: malyyigor34/15_min_google_maps_parser_api:v1
+        container_name: api_celery_worker
+        env_file:
+            - stack.env
+        command: celery -A google_maps_parser_api worker --loglevel=info
+        depends_on:
+            - rabbitmq
+        restart: unless-stopped
+
+    db:
+        image: mysql:8.2.0
+        container_name: "db"
+        restart: unless-stopped
+        env_file:
+            - stack.env
+        ports:
+            - '3306:3306'
+        volumes:
+            - .data/15min/api_db:/var/lib/mysql
+
+    mongo:
+        image: mongo
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+        ports:
+            - "28017:27017"
+        volumes:
+            - ".data/15min/gmaps_data/:/data/db/"
+
+    webadmin:
+        image: malyyigor34/15_min_google_maps_admin_ui:v1
+        restart: unless-stopped
+        ports:
+            - "8097:3000"
+        depends_on:
+            api:
+                condition: service_started

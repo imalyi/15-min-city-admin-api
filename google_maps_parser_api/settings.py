@@ -12,6 +12,7 @@ ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
+    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,10 +24,10 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_celery_results',
     'google_maps_parser_api',
     'users',
     'gmaps',
-    'status'
 ]
 
 MIDDLEWARE = [
@@ -162,7 +163,9 @@ PIKA_HOST = os.environ.get('PIKA_HOST')
 PIKA_PORT = os.environ.get('PIKA_PORT')
 
 
-CSRF_TRUSTED_ORIGINS=['https://15minadmin.1213213.xyz']
+CELERY_BROKER_URL = f"amqp://{PIKA_USERNAME}:{PIKA_PASSWORD}@{PIKA_HOST}:{PIKA_PORT}"
+
+CSRF_TRUSTED_ORIGINS = ['https://15minadmin.1213213.xyz']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -173,3 +176,35 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 #]
 
 CORS_ORIGIN_ALLOW_ALL = True
+CELERY_BEAT_SCHEDULER = 'google_maps_parser_api.schedulers:DatabaseScheduler'
+
+CELERY_CACHE_BACKEND = 'default'
+
+# django setting.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'gmaps_result_task_cache',
+    }
+}
+
+CELERY_RESULT_EXTENDED = True
+
+
+MONGO_DB_USERNAME = os.environ.get('MONGO_DB_USERNAME')
+MONGO_DB_PASSWORD = os.environ.get('MONGO_DB_PASSWORD')
+MONGO_DB_HOST = os.environ.get('MONGO_DB_HOST')
+MONGO_DB_PORT = os.environ.get('MONGO_DB_PORT')
+MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
+
+
+#MONGO_DB_USERNAME = 'gmaps'
+#MONGO_DB_NAME = 'gmaps'
+#MONGO_DB_PASSWORD = 'gmaps'
+#MONGO_DB_HOST = 'localhost'
+#MONGO_DB_PORT = 28017
+
+
+
+
+MONGO_CONNECT = f"mongodb://{MONGO_DB_USERNAME}:{MONGO_DB_PASSWORD}@{MONGO_DB_HOST}:{MONGO_DB_PORT}"

@@ -1,3 +1,5 @@
+import json
+
 import pika
 from google_maps_parser_api.settings import PIKA_USERNAME, PIKA_PASSWORD, PIKA_HOST, PIKA_PORT
 import logging
@@ -9,13 +11,13 @@ logger = logging.getLogger(f"{__name__}_TaskSender")
 
 class TaskSender(ABC):
     @abstractmethod
-    def send(self, task: str) -> bool:
+    def send(self, template_id: int) -> bool:
         pass
 
 
 class TaskSenderConsole(TaskSender):
-    def send(self, task: str) -> bool:
-        print(task)
+    def send(self, template_id: int) -> bool:
+        print(f"Task template with ID {template_id} sent to exec")
         return True
 
 
@@ -49,17 +51,17 @@ class RabbitMQTaskSender(TaskSender):
             logger.error("Cant create rabbitmq queue", exc_info=True)
             raise self.BrokerMessageError(f"Can't create queue: {e}")
 
-    def send(self, task: str) -> bool:
+    def send(self, template_id: int) -> bool:
         try:
             self.__create_queue()
             self.channel.basic_publish(
                 exchange='',
                 routing_key='gmaps',
-                body=task,
+                body=json.dumps({'template_id': template_id}),
                 properties=pika.BasicProperties(
                     delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
                 ))
-            logger.debug(f"Send task to rabbitmq {task}")
+            logger.debug(f"Send task to rabbitmq {template_id}")
             return True
         except pika.exceptions.BodyTooLong:
             logger.error("Cant send task to rabbitmq", exc_info=True)

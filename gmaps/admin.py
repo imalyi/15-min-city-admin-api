@@ -1,4 +1,4 @@
-from gmaps.models import Coordinate, Credential, TaskTemplate, PlaceType, Task, Schedule, Category
+from gmaps.models import Coordinate, Credential, Task, PlaceType, TaskResult, Category
 from django.contrib import admin
 
 from django.contrib.auth.admin import UserAdmin
@@ -9,7 +9,7 @@ class CoordinateAdmin(admin.ModelAdmin):
     list_display = ('name', 'lon', 'lat')
 
 
-@admin.register(TaskTemplate)
+@admin.register(Task)
 class TaskTemplateAdmin(admin.ModelAdmin):
     list_display = ('place', 'coordinates', 'credentials')
 
@@ -24,15 +24,11 @@ class CredentialAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
-@admin.register(Task)
+@admin.register(TaskResult)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('template', 'planned_exec_date', 'status', 'start', 'finish', 'items_collected')
+    list_display = ('task', 'status', 'start', 'finish', 'items_collected')
 
 
-@admin.register(Schedule)
-class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('minute', 'hour', 'day_of_month')
-    
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     pass
