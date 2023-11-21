@@ -7,7 +7,7 @@ logger = logging.getLogger(f"{__name__}_Request")
 SLEEP = 3
 
 
-def generate_date():
+def generate_date() -> datetime:
     current_utc_datetime = datetime.now(timezone.utc)
     today_utc = datetime(current_utc_datetime.year, current_utc_datetime.month, current_utc_datetime.day, 0, 0, 0,
                          tzinfo=timezone.utc)
@@ -19,7 +19,7 @@ class GmapsAPIError(Exception):
 
 
 class Response:
-    def __init__(self, task_progress: 'TaskResult', token: str, type_: str, radius: int, location: tuple):
+    def __init__(self, task_progress: 'TaskResult', token: str, type_: str, radius: int, location: tuple) -> None:
         self.type_ = type_
         self.location = location
         self.radius = radius
@@ -40,7 +40,7 @@ class Response:
             logger.error(error)
             raise GmapsAPIError(error)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"type: {self.type_}, location: {self.location}, radius: {self.radius}, next page token: {self._next_page}"
 
     def _make_request(self):
@@ -64,13 +64,13 @@ class Response:
             raise GmapsAPIError(error)
 
     @property
-    def _next_page(self):
+    def _next_page(self) -> str:
         return self._response.get('next_page_token', '')
 
     def __iter__(self):
         return self
 
-    def __collect_all(self):
+    def __collect_all(self) -> None:
         try:
             self._create_gmaps_client()
             self._make_request()
@@ -80,7 +80,7 @@ class Response:
         except GmapsAPIError as err:
             self.task_progress.change_status_to_error(error=str(err))
 
-    def __next__(self):
+    def __next__(self) -> str:
         if not self._data:
             self.__collect_all()
         if self._current < len(self._data) - 1:

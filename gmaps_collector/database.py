@@ -12,28 +12,28 @@ logger = logging.getLogger(f"{__name__}_Database")
 
 class Database(ABC):
     @abc.abstractmethod
-    def add_item(self, item):
+    def add_item(self, item) -> None:
         pass
 
 
 class ConsoleDataBase(Database):
-    def add_item(self, item):
+    def add_item(self, item) -> None:
         print(f"{str(self)}: {item}")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "ConsoleDataBase"
 
 
 class MongoDatabase(Database):
-    def __init__(self):
+    def __init__(self) -> None:
         self.__connect()
 
-    def __connect(self):
+    def __connect(self) -> None:
         self.client = MongoClient()
         self.client = MongoClient(MONGO_CONNECT)
         self.db = self.client.get_database(MONGO_DB_NAME)
 
-    def add_item(self, data):
+    def add_item(self, data: str) -> None:
         try:
             logger.debug(f"Creating document {data}")
             self.db['gmaps'].insert_one(data.copy())
@@ -41,7 +41,7 @@ class MongoDatabase(Database):
         except DuplicateKeyError:
             logger.debug(f"Document exist in db")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "MongoDB"
 
 
