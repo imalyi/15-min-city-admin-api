@@ -9,10 +9,18 @@ class CredentialSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class PlaceTypeSerializer(ModelSerializer):
+class CategorySerializer(ModelSerializer):
     class Meta:
-        fields = ("id", "value", )
+        model = Category
+        fields = "__all__"
+
+
+class PlaceTypeSerializer(ModelSerializer):
+    category = CategorySerializer()
+
+    class Meta:
         model = PlaceType
+        fields = "__all__"
 
 
 class CategoryPlaceSerializer(ModelSerializer):
@@ -40,19 +48,6 @@ class CoordinateSerializer(ModelSerializer):
 class ScheduleSerializer(ModelSerializer):
     class Meta:
         model = IntervalSchedule
-        fields = "__all__"
-
-
-class CategorySerializer(ModelSerializer):
-    class Meta:
-        model = Category
-        fields = "__all__"
-
-
-class PlaceTypeSerializer(ModelSerializer):
-    category = CategorySerializer()
-    class Meta:
-        model = PlaceType
         fields = "__all__"
 
 
