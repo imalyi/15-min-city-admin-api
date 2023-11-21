@@ -142,7 +142,10 @@ class Task(Model):
 
 @receiver(post_delete, sender=Task)
 def delete_all_periodic_task_for_task(sender, instance, **kwargs):
-    PeriodicTask.objects.get(name=instance.place.value).delete()
+    try:
+        PeriodicTask.objects.get(name=instance.place.value).delete()
+    except PeriodicTask.DoesNotExist:
+        pass
 
 
 class TaskResult(Model):
