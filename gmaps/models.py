@@ -1,4 +1,6 @@
 import json
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, DO_NOTHING, DateField, CASCADE, DurationField, Manager
 from django.utils import timezone
@@ -46,6 +48,19 @@ class Credential(Model):
 
     class Meta:
         unique_together = ('token', 'name')
+
+    def save(self, *args, **kwargs):
+        super(Credential, self).save(*args, **kwargs)
+        try:
+            task_with_this_credentials = Task.objects.filter(credentials=self)
+            for task in task_with_this_credentials:
+                periodic_task = PeriodicTask.objects.get(name=task.place.value)
+                old_periodic_task_args = json.loads(periodic_task.args)
+                old_periodic_task_args[1] = self.token
+                periodic_task.args = json.dumps(old_periodic_task_args)
+                periodic_task.save()
+        except Task.DoesNotExist:
+            return
 
     def __repr__(self):
         return self.name
@@ -110,10 +125,6 @@ class Task(Model):
                                  self.coordinates.radius])
             )
 
-    def delete(self, *args, **kwargs):
-        with transaction.atomic():
-            PeriodicTask.objects.get(name=self.place.value).delete()
-            super(Task, self).delete(*args, **kwargs)
 
     @property
     def last_status(self):
@@ -127,6 +138,11 @@ class Task(Model):
 
     def __str__(self):
         return self.place.value
+
+
+@receiver(post_delete, sender=Task)
+def delete_all_periodic_task_for_task(sender, instance, **kwargs):
+    PeriodicTask.objects.get(name=instance.place.value).delete()
 
 
 class TaskResult(Model):

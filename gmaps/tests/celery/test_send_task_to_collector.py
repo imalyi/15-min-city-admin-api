@@ -2,15 +2,6 @@ from google_maps_parser_api.celery import send_task_to_collector
 from django.test import TestCase
 from gmaps.models import PlaceType, Coordinate, Task, TaskResult, Credential
 from django_celery_beat.models import IntervalSchedule
-from unittest.mock import Mock, patch
-
-
-class MockCollector:
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def collect(self):
-        return "Mocked result"
 
 
 class TestCeleryTasks(TestCase):
@@ -32,5 +23,3 @@ class TestCeleryTasks(TestCase):
         self.assertEquals(task_result.error, None)
         self.assertNotEquals(task_result.start, None)
         self.assertNotEquals(task_result.finish, None)
-
-
