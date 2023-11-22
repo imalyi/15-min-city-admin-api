@@ -1,6 +1,5 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, StringRelatedField, CharField, DateTimeField
-from gmaps.models import Credential, PlaceType, Coordinate, TaskResult, Task, Category
-from django_celery_beat.models import IntervalSchedule
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, PrimaryKeyRelatedField, IntegerField, CharField, DateTimeField
+from gmaps.models import Credential, PlaceType, Coordinate, TaskResult, Task, Category, CrontabSchedule
 
 
 class CredentialSerializer(ModelSerializer):
@@ -33,7 +32,6 @@ class CategoryPlaceSerializer(ModelSerializer):
         return {"category_name": category_representation['value'], "places": places_serialized}
 
 
-
     class Meta:
         model = PlaceType
         fields = "__all__"
@@ -47,8 +45,8 @@ class CoordinateSerializer(ModelSerializer):
 
 class ScheduleSerializer(ModelSerializer):
     class Meta:
-        model = IntervalSchedule
-        fields = "__all__"
+        model = CrontabSchedule
+        fields = ("human_readable", "id")
 
 
 class TaskSerializer(ModelSerializer):
@@ -74,7 +72,7 @@ class TaskCreateSerializer(ModelSerializer):
     place = PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
     credentials = PrimaryKeyRelatedField(queryset=Credential.objects.all())
     coordinates = PrimaryKeyRelatedField(queryset=Coordinate.objects.all())
-    schedule = PrimaryKeyRelatedField(queryset=IntervalSchedule.objects.all())
+    schedule = PrimaryKeyRelatedField(queryset=CrontabSchedule.objects.all())
 
     class Meta:
         model = Task

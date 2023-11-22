@@ -29,6 +29,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_display = ('task', 'status', 'start', 'finish', 'items_collected')
 
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     pass
