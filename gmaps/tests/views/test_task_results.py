@@ -7,17 +7,9 @@ from users.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-class TestPlaceType(APITestCase):
+class TestTaskResult(APITestCase):
     def setUp(self):
         pass
 
-    def test_list_place_type_authorised(self):
+    def test_list_task_results_authorised(self):
         pass
-
-    def test_retrieve_place_type_authorised(self):
-        pass
-
-    def test_list_place_type_unauthorised(self):
-        url = reverse('place-list')
-        response = self.client.get(url)
-        self.assertEquals(response.status_code, HTTP_401_UNAUTHORIZED)

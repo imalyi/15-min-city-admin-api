@@ -15,7 +15,7 @@ class TestCeleryTasks(TestCase):
     def setUp(self):
         self.__create_task()
 
-    def test_send_task_to_collector(self):
+    def test_send_task_to_collector_with_no_errors(self):
         send_task_to_collector(self.task.id, self.task.credentials.token, self.task.place.value,
                                (self.task.coordinates.lat, self.task.coordinates.lon), self.task.coordinates.radius)
         task_result = TaskResult.objects.get(task=self.task)
@@ -23,3 +23,15 @@ class TestCeleryTasks(TestCase):
         self.assertEquals(task_result.error, None)
         self.assertNotEquals(task_result.start, None)
         self.assertNotEquals(task_result.finish, None)
+
+    def test_send_task_to_collector_with_invalid_api_key(self):
+        pass
+
+    def test_send_task_to_collector_with_invalid_place(self):
+        pass
+
+    def test_send_task_to_collector_with_invalid_coordinates(self):
+        pass
+
+    def test_send_task_to_collector_with_request_limit(self):
+        pass
