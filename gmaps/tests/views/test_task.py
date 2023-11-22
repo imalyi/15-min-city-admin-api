@@ -1,8 +1,6 @@
-import re
-
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT, HTTP_500_INTERNAL_SERVER_ERROR
 
 from gmaps.models import PlaceType, Category, Task, Credential, Coordinate, CrontabSchedule, PeriodicTask
 from gmaps.serializers import TaskSerializer
@@ -52,7 +50,20 @@ class TestTask(APITestCase):
         mock_send_task.assert_called_once_with(self.task.id, self.credential.token, self.place.value, [self.coordinates.lat, self.coordinates.lon], self.coordinates.radius)
         self.assertEquals(response.status_code, HTTP_200_OK)
 
+    @patch('google_maps_parser_api.celery.send_task_to_collector.delay')
+    def test_start_task_raises_unknown_error_authorised(self, mock_send_task):
+        mock_send_task.side_effect = KeyError("Message")
+        response = self.client.get(reverse("task-start", str(self.task.id)), HTTP_AUTHORIZATION=self.access_token)
+        mock_send_task.assert_called_once_with(self.task.id, self.credential.token, self.place.value, [self.coordinates.lat, self.coordinates.lon], self.coordinates.radius)
+        self.assertEquals(response.status_code, HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_start_not_exist_task_authorised(self):
+        PeriodicTask.objects.all().delete()
+        response = self.client.get(reverse("task-start", str(self.task.id)), HTTP_AUTHORIZATION=self.access_token)
+        self.assertEquals(response.status_code, HTTP_404_NOT_FOUND)
+
     def test_update_task_authorised(self):
+        """Will be written in the future"""
         pass
 
     def test_delete_task_authorised(self):

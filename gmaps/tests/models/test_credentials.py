@@ -13,3 +13,6 @@ class TestCredentials(TestCase):
 
     def test_repr_method(self):
         self.assertEquals(repr(self.credentials), self.token_name)
+
+    def test_api_key_update(self):
+        pass
