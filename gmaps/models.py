@@ -151,6 +151,7 @@ def delete_all_periodic_task_for_task(sender, instance, **kwargs):
         PeriodicTask.objects.get(name=instance.place.value).delete()
     except PeriodicTask.DoesNotExist:
         pass
+        #TODO add sending error to log
 
 
 class TaskResult(Model):

@@ -45,6 +45,7 @@ class TestTaskResult(TestCase):
         with self.assertRaises(TaskResult.InvalidProgressValue):
             self.task_result.update_progress("124f")
 
+
     def test_update_progress_with_incorrect_status(self):
         for status in [WAITING, DONE, ERROR]:
             with self.assertRaises(TaskResult.InvalidStatusForProgressTrack):
@@ -55,3 +56,18 @@ class TestTaskResult(TestCase):
         task_result = TaskResult.objects.create(task=self.task, status=RUNNING)
         task_result.update_progress(14)
         self.assertEquals(task_result.items_collected, 14)
+
+    def test_change_status_to_error(self):
+        task_result = TaskResult.objects.create(task=self.task, status=RUNNING)
+        task_result.change_status_to_error()
+        self.assertEquals(task_result.status, ERROR)
+
+    def test_change_status_to_running(self):
+        task_result = TaskResult.objects.create(task=self.task, status=WAITING)
+        task_result.change_status_to_running()
+        self.assertEquals(task_result.status, RUNNING)
+
+    def test_change_status_to_done(self):
+        task_result = TaskResult.objects.create(task=self.task, status=WAITING)
+        task_result.change_status_to_done()
+        self.assertEquals(task_result.status, DONE)
