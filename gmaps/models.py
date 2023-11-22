@@ -1,5 +1,5 @@
 import json
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.reverse import reverse, reverse_lazy
 from django.db.models import Model, IntegerField, CharField, ForeignKey, DateTimeField, FloatField, CASCADE
@@ -113,19 +113,6 @@ class Task(Model):
     place = ForeignKey(PlaceType, on_delete=CASCADE, unique=True)
     schedule = ForeignKey(CrontabSchedule, on_delete=CASCADE)
 
-    def save(self, *args, **kwargs):
-        with transaction.atomic():
-            super(Task, self).save(*args, **kwargs)
-            PeriodicTask.objects.create(
-                name=self.place,
-                task="google_maps_parser_api.celery.send_task_to_collector",
-                crontab_id=self.schedule.id,
-                args=json.dumps([self.pk, self.credentials.token,
-                                 self.place.value,
-                                 (self.coordinates.lat, self.coordinates.lon),
-                                 self.coordinates.radius])
-            )
-
 
     @property
     def last_status(self):
@@ -152,6 +139,27 @@ def delete_all_periodic_task_for_task(sender, instance, **kwargs):
     except PeriodicTask.DoesNotExist:
         pass
         #TODO add sending error to log
+
+
+@receiver(post_save, sender=Task)
+def add_periodic_task(sender, instance, **kwargs):
+    try:
+        periodic_task = PeriodicTask.objects.get(name=instance.place.value)
+        periodic_task.token = instance.credentials.token
+        periodic_task_args = json.loads(periodic_task.args)
+        periodic_task_args[1] = instance.credentials.token
+        periodic_task.args = json.dumps(periodic_task_args)
+        periodic_task.save()
+    except PeriodicTask.DoesNotExist:
+        PeriodicTask.objects.create(
+            name=instance.place,
+            task="google_maps_parser_api.celery.send_task_to_collector",
+            crontab_id=instance.schedule.id,
+            args=json.dumps([instance.pk, instance.credentials.token,
+                             instance.place.value,
+                             (instance.coordinates.lat, instance.coordinates.lon),
+                             instance.coordinates.radius])
+        )
 
 
 class TaskResult(Model):
