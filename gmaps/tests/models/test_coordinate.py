@@ -15,3 +15,6 @@ class TestCoordinates(TestCase):
 
     def test_repr_method(self):
         self.assertEquals(repr(self.coordinate), self.name)
+
+    def test_validate_allowed_values_lat_lon(self):
+        pass

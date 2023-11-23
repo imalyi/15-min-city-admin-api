@@ -1,0 +1,6 @@
+[run]
+omit = */tests/*, */migrations/*, */urls.py, */settings/*, */wsgi.py, manage.py, */asgi.py, google_maps_parser_api/schedulers.py, load_logging_conf.py
+source = .
+
+[report]
+show_missing = true

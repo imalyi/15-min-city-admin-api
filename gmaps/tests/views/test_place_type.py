@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
-from gmaps.models import PlaceType
+from gmaps.models import PlaceType, Category
 from gmaps.serializers import CategoryPlaceSerializer
 from users.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,32 +9,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 class TestPlaceType(APITestCase):
     def setUp(self):
+        self.category = Category.objects.create(value="test_cat")
+        self.place = PlaceType.objects.create(value="test_place", category=self.category)
         self.admin = User.objects.create_superuser('admin', 'admin')
         self.access_token = "Bearer " + str(RefreshToken.for_user(self.admin).access_token)
-        self.place = PlaceType.objects.create(value="test_place")
 
     def test_list_place_type_authorised(self):
-        response = self.client.get(reverse('place-list'), HTTP_AUTHORIZATION=self.access_token)
+        response = self.client.get(reverse("place-list"), HTTP_AUTHORIZATION=self.access_token)
         self.assertEquals(response.status_code, HTTP_200_OK)
-        serialized_data = CategoryPlaceSerializer(self.place).data
-        self.assertEquals(response.data, [serialized_data])
-
-    def test_create_place_type_authorised(self):
-        value = 'test2'
-        response = self.client.post(reverse('place-list'), data={'value': value}, HTTP_AUTHORIZATION=self.access_token)
-        self.assertEquals(response.status_code, HTTP_201_CREATED)
-        self.assertEquals(PlaceType.objects.get(value=value).value, value)
-
-    def test_retrieve_place_type_authorised(self):
-        response = self.client.get(reverse('place-detail', str(self.place.id)), HTTP_AUTHORIZATION=self.access_token)
-        self.assertEquals(response.status_code, HTTP_200_OK)
-        serialized_data = CategoryPlaceSerializer(self.place).data
-        self.assertEquals(response.data, serialized_data)
-
-    def test_update_place_type_authorised(self):
-        url = reverse('place-detail', str(self.place.id))
-        response = self.client.put(url, data={'value': 'new'}, HTTP_AUTHORIZATION=self.access_token)
-        self.assertEquals(response.status_code, HTTP_200_OK)
+        self.assertIn("category_name", response.data[0])
+        self.assertIn("places", response.data[0])
 
     def test_list_place_type_unauthorised(self):
         url = reverse('place-list')

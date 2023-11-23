@@ -1,4 +1,3 @@
-import json
 from gmaps.models import PlaceType
 from django.test import TestCase
 

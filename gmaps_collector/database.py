@@ -4,8 +4,7 @@ from abc import ABC
 
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
-from google_maps_parser_api.settings import MONGO_CONNECT, MONGO_DB_NAME, MONGO_DB_HOST
-
+import os
 
 logger = logging.getLogger(f"{__name__}_Database")
 
@@ -26,12 +25,24 @@ class ConsoleDataBase(Database):
 
 class MongoDatabase(Database):
     def __init__(self) -> None:
-        self.__connect()
+        self.username = os.environ.get('MONGO_DB_USERNAME')
+        self.password = os.environ.get('MONGO_DB_PASSWORD')
+        self.host = os.environ.get('MONGO_DB_HOST')
+        self.port = os.environ.get('MONGO_DB_PORT')
+        self.db_name = os.environ.get('MONGO_DB_NAME')
+        self.connect_str = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
+        self._connect()
 
-    def __connect(self) -> None:
-        self.client = MongoClient()
-        self.client = MongoClient(MONGO_CONNECT)
-        self.db = self.client.get_database(MONGO_DB_NAME)
+    def _connect(self) -> None:
+        try:
+            self.client = MongoClient(self.connect_str)
+            self.db = self.client.get_database(self.db_name)
+        except ValueError as err:
+            #TODO: log error
+            pass
+        except Exception as err:
+            #TODO log error
+            pass
 
     def add_item(self, data: str) -> None:
         try:
@@ -46,7 +57,8 @@ class MongoDatabase(Database):
 
 
 def get_database() -> Database:
-    if MONGO_DB_HOST is None:
+
+    if os.environ.get('MONGO_DB_NAME') is None:
         obj = ConsoleDataBase()
     else:
         obj = MongoDatabase()

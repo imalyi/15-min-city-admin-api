@@ -3,14 +3,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 
 
 class CustomAccountManager(BaseUserManager):
-    def create_user(self, username, password, **other_fields):
-        if not username:
-            raise ValueError(f"Username cant be {username}")
-        user = self.model(username=username, **other_fields)
-        user.set_password(password)
-        user.save()
-        return user
-
     def create_superuser(self, username, password, **other_fields):
         other_fields.setdefault('is_staff', True)
         other_fields.setdefault('is_active', True)
