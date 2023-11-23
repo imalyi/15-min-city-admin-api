@@ -18,6 +18,10 @@ class GmapsAPIError(Exception):
     pass
 
 
+class InvalidAPIKey(Exception):
+    pass
+
+
 class Response:
     def __init__(self, task_progress: 'TaskResult', token: str, type_: str, radius: int, location: tuple) -> None:
         self.type_ = type_
@@ -38,7 +42,7 @@ class Response:
         except ValueError:
             error = f"Invalid API key {self.token[0:10]}..."
             logger.error(error)
-            raise GmapsAPIError(error)
+            raise InvalidAPIKey(error)
 
     def __str__(self) -> str:
         return f"type: {self.type_}, location: {self.location}, radius: {self.radius}, next page token: {self._next_page}"
@@ -50,9 +54,9 @@ class Response:
                 self._response = self.client.places_nearby(location=self.location, type=self.type_, radius=self.radius)
             else:
                 self._response = self.client.places(page_token=self._next_page)
-            self._data.extend(self._response.get('results'))
-            logger.debug(f"Collected {len(self._response.get('results'))} items. Request {str(self)}")
-            self.task_progress.update_progress(len(self._response.get('results')))
+            self._data.extend(self._response.get('results', []))
+            logger.debug(f"Collected {len(self._response.get('results', []))} items. Request {str(self)}")
+            self.task_progress.update_progress(len(self._response.get('results', [])))
             time.sleep(SLEEP)
         except googlemaps.exceptions.Timeout:
             error = f"Request timeout error. Check api limit {str(self)}"
@@ -78,6 +82,8 @@ class Response:
                 self._make_request()
             self.task_progress.change_status_to_done()
         except GmapsAPIError as err:
+            self.task_progress.change_status_to_error(error=str(err))
+        except InvalidAPIKey as err:
             self.task_progress.change_status_to_error(error=str(err))
 
     def __next__(self) -> str:

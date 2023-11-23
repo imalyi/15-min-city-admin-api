@@ -68,6 +68,6 @@ class TestTaskResult(TestCase):
         self.assertEquals(task_result.status, RUNNING)
 
     def test_change_status_to_done(self):
-        task_result = TaskResult.objects.create(task=self.task, status=WAITING)
+        task_result = TaskResult.objects.create(task=self.task, status=RUNNING)
         task_result.change_status_to_done()
         self.assertEquals(task_result.status, DONE)

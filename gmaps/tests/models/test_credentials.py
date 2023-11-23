@@ -30,3 +30,10 @@ class TestCredentials(TestCase):
         periodic_task = PeriodicTask.objects.get(name=self.task.place.value)
         periodic_task_args = json.loads(periodic_task.args)
         self.assertEquals(periodic_task_args[1], new_secret_token)
+
+    def test_api_key_update_with_not_existing_task(self):
+        new_secret_token = "new_secret_token"
+        self.credentials.token = new_secret_token
+        Task.objects.all().delete()
+        self.credentials.save()
+
