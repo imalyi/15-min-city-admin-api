@@ -16,6 +16,7 @@ django-celery-beat==2.5.0
 django-celery-results==2.5.1
 django-cors-headers==4.3.0
 django-nose==1.4.7
+django-request-logging==0.7.5
 django-timezone-field==6.0.1
 djangorestframework==3.14.0
 djangorestframework-api-key==2.3.0
