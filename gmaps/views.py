@@ -6,7 +6,7 @@ from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveAPIV
 from rest_framework import viewsets
 from gmaps.serializers import CredentialSerializer, CategoryPlaceSerializer, CoordinateSerializer, TaskResultSerializer, TaskSerializer, TaskCreateSerializer
 from gmaps.serializers import TaskCreateSerializer, ScheduleSerializer
-from gmaps.models import Credential, Coordinate, Task, TaskResult, Category
+from gmaps.models import Credential, Coordinate, Task, TaskResult, Category, CrontabSchedule
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from google_maps_parser_api.celery import send_task_to_collector
 
@@ -50,7 +50,7 @@ class TaskView(viewsets.ModelViewSet):
 
 class ScheduleView(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
-    queryset = IntervalSchedule.objects.all()
+    queryset = CrontabSchedule.objects.all()
 
 
 class TaskResultView(ListAPIView):
