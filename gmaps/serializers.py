@@ -31,7 +31,6 @@ class CategoryPlaceSerializer(ModelSerializer):
         places_serialized = PlaceTypeSerializer(places, many=True).data
         return {"category_name": category_representation['value'], "places": places_serialized}
 
-
     class Meta:
         model = PlaceType
         fields = "__all__"
@@ -44,9 +43,11 @@ class CoordinateSerializer(ModelSerializer):
 
 
 class ScheduleSerializer(ModelSerializer):
+    human_readable = CharField(read_only=True)
+
     class Meta:
         model = CrontabSchedule
-        fields = ("human_readable", "id")
+        exclude = ('timezone', )
 
 
 class TaskSerializer(ModelSerializer):
