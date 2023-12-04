@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'google_maps_parser_api',
     'users',
     'gmaps',
+    'openstreetmaps',
 ]
 
 MIDDLEWARE = [
@@ -157,10 +158,10 @@ SIMPLE_JWT = {
 
 APPEND_SLASH = True
 
-PIKA_USERNAME = os.environ.get('PIKA_USERNAME')
-PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD')
-PIKA_HOST = os.environ.get('PIKA_HOST')
-PIKA_PORT = os.environ.get('PIKA_PORT')
+PIKA_USERNAME = os.environ.get('PIKA_USERNAME', 'django_api')
+PIKA_PASSWORD = os.environ.get('PIKA_PASSWORD', 'django_api')
+PIKA_HOST = os.environ.get('PIKA_HOST', '192.168.0.100')
+PIKA_PORT = os.environ.get('PIKA_PORT', 5672)
 
 
 CELERY_BROKER_URL = f"amqp://{PIKA_USERNAME}:{PIKA_PASSWORD}@{PIKA_HOST}:{PIKA_PORT}"
@@ -211,7 +212,7 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
     },

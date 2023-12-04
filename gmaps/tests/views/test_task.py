@@ -44,13 +44,13 @@ class TestTask(APITestCase):
         serialized_task_data = TaskSerializer(self.task).data
         self.assertEqual(response.data, serialized_task_data)
 
-    @patch('google_maps_parser_api.celery.send_task_to_collector.delay')
+    @patch('google_maps_parser_api.celery.send_gmaps_task_to_collector.delay')
     def test_start_task_authorised(self, mock_send_task):
         response = self.client.get(reverse("task-start", str(self.task.id)), HTTP_AUTHORIZATION=self.access_token)
         mock_send_task.assert_called_once_with(self.task.id, self.credential.token, self.place.value, [self.coordinates.lat, self.coordinates.lon], self.coordinates.radius)
         self.assertEquals(response.status_code, HTTP_200_OK)
 
-    @patch('google_maps_parser_api.celery.send_task_to_collector.delay')
+    @patch('google_maps_parser_api.celery.send_gmaps_task_to_collector.delay')
     def test_start_task_raises_unknown_error_authorised(self, mock_send_task):
         mock_send_task.side_effect = KeyError("Message")
         response = self.client.get(reverse("task-start", str(self.task.id)), HTTP_AUTHORIZATION=self.access_token)

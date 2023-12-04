@@ -3,7 +3,7 @@ import unittest
 
 import googlemaps.client
 from django.test import TestCase
-from gmaps_collector.response import Response, generate_date, GmapsAPIError, InvalidAPIKey
+from collectors.gmaps.response import Response, generate_date, InvalidAPIKey
 from unittest.mock import MagicMock, patch, PropertyMock
 import os
 
@@ -30,7 +30,7 @@ class TestResponse(TestCase):
         self.assertIsInstance(self.response.client, googlemaps.client.Client)
 
     @unittest.skipIf(os.environ.get("GMAPS_TOKEN", True), 'To run tests, set a Google Maps API key to OS variable GMAPS_TOKEN')
-    @patch("gmaps_collector.response.googlemaps.Client.places_nearby")
+    @patch("gmaps.response.googlemaps.Client.places_nearby")
     def test_make_request_with_no_next_page(self, mock_places_nearby):
         self.response._create_gmaps_client()
         mock_response = {'results': ""}
@@ -41,8 +41,8 @@ class TestResponse(TestCase):
         mock_places_nearby.assert_called_with(location=self.response.location, type=self.response.type_, radius=self.response.radius)
 
     @unittest.skipIf(os.environ.get("GMAPS_TOKEN", True), 'To run tests, set a Google Maps API key to OS variable GMAPS_TOKEN')
-    @patch("gmaps_collector.response.Response._next_page", new_callable=PropertyMock)
-    @patch("gmaps_collector.response.googlemaps.Client.places")
+    @patch("gmaps.response.Response._next_page", new_callable=PropertyMock)
+    @patch("gmaps.response.googlemaps.Client.places")
     def test_make_request_with_next_page(self, mock_client, mock_next_page):
         self.response._create_gmaps_client()
         mock_next_page.return_value = "mock_next_page_token"
