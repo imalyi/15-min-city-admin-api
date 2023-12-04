@@ -11,25 +11,33 @@ logger = logging.getLogger(f"{__name__}_Database")
 
 class Database(ABC):
     @abc.abstractmethod
+    def __init__(self, collection_name: str) -> None:
+        pass
+
+    @abc.abstractmethod
     def add_item(self, item) -> None:
         pass
 
 
-class ConsoleDataBase(Database):
+class DummyDB(Database):
+    def __init__(self, collection_name: str) -> None:
+        self.collection_name = collection_name
+
     def add_item(self, item) -> None:
-        print(f"{str(self)}: {item}")
+        print(f"{str(self)}:{self.collection_name}: {item}")
 
     def __str__(self) -> str:
         return "ConsoleDataBase"
 
 
 class MongoDatabase(Database):
-    def __init__(self) -> None:
+    def __init__(self, collection_name: str) -> None:
         self.username = os.environ.get('MONGO_DB_USERNAME')
         self.password = os.environ.get('MONGO_DB_PASSWORD')
         self.host = os.environ.get('MONGO_DB_HOST')
         self.port = os.environ.get('MONGO_DB_PORT')
         self.db_name = os.environ.get('MONGO_DB_NAME')
+        self.collection_name = collection_name
         self.connect_str = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
         self._connect()
 
@@ -47,7 +55,7 @@ class MongoDatabase(Database):
     def add_item(self, data: str) -> None:
         try:
             logger.debug(f"Creating document {data}")
-            self.db['gmaps'].insert_one(data.copy())
+            self.db[self.collection_name].insert_one(data.copy())
             logger.debug(f"Document created")
         except DuplicateKeyError:
             logger.debug(f"Document exist in db")
@@ -56,11 +64,10 @@ class MongoDatabase(Database):
         return "MongoDB"
 
 
-def get_database() -> Database:
-
+def get_database(collection_name: str) -> Database:
     if os.environ.get('MONGO_DB_NAME') is None:
-        obj = ConsoleDataBase()
+        obj = DummyDB(collection_name)
     else:
-        obj = MongoDatabase()
+        obj = MongoDatabase(collection_name)
     print(f"Database: {obj}")
     return obj

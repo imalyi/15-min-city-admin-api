@@ -8,7 +8,7 @@ from gmaps.serializers import CredentialSerializer, CategoryPlaceSerializer, Coo
 from gmaps.serializers import TaskCreateSerializer, ScheduleSerializer
 from gmaps.models import Credential, Coordinate, Task, TaskResult, Category, CrontabSchedule
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
-from google_maps_parser_api.celery import send_task_to_collector
+from google_maps_parser_api.celery import send_gmaps_task_to_collector
 
 
 class CredentialView(viewsets.ModelViewSet):
@@ -40,7 +40,7 @@ class TaskView(viewsets.ModelViewSet):
         try:
             task = Task.objects.get(id=pk)
             periodic_task = PeriodicTask.objects.get(name=task.place.value)
-            send_task_to_collector.delay(*json.loads(periodic_task.args))
+            send_gmaps_task_to_collector.delay(*json.loads(periodic_task.args))
         except PeriodicTask.DoesNotExist:
             return Response({'detail': f"Task with id {pk} is broken. Please, delete and recreate this task"}, status=HTTP_404_NOT_FOUND)
         except Exception as err:

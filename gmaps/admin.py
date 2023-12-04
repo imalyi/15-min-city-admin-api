@@ -1,4 +1,5 @@
 from gmaps.models import Coordinate, Credential, Task, PlaceType, TaskResult, Category
+from openstreetmaps.models import OSMError, OSMTask, OSMTaskResult
 from django.contrib import admin
 
 from django.contrib.auth.admin import UserAdmin
@@ -32,4 +33,17 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(OSMTask)
+class OSMTaskAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(OSMTaskResult)
+class OSMTaskResultAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(OSMError)
+class OSMErrorAdmin(admin.ModelAdmin):
     pass

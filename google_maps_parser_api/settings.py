@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'google_maps_parser_api',
     'users',
     'gmaps',
+    'openstreetmaps',
 ]
 
 MIDDLEWARE = [
@@ -211,7 +212,7 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
     },
