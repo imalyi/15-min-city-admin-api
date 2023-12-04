@@ -24,19 +24,23 @@ class OSMTask(models.Model):
             return "DONE_WITH_ERRORS"
 
 
-
 class OSMTaskResult(models.Model):
     task = models.ForeignKey(OSMTask, on_delete=models.CASCADE)
     start_date = models.DateTimeField(auto_now=True)
     finish_date = models.DateTimeField(null=True, blank=True, default=None, unique=True)
-    items_collected = models.IntegerField(default=0)
+    addresses_items_collected = models.IntegerField(default=0)
+    amenity_items_collected = models.IntegerField(default=0)
 
     @property
     def errors(self):
         return OSMError.objects.filter(task_result=self)
 
-    def update_progress(self, progress: int):
-        self.items_collected += progress
+    def update_address_progress(self, progress: int):
+        self.addresses_items_collected += progress
+        self.save()
+
+    def update_amenity_progress(self, progress: int):
+        self.amenity_items_collected += progress
         self.save()
 
     def add_error(self, data: str, type: str) -> None:

@@ -3,7 +3,7 @@ from collectors.database import get_database
 from collectors.openstreetmaps.common import get_map
 
 
-class Amenities:
+class Amenity:
     def __init__(self, country: str) -> None:
         self.country = country
         self.db = get_database('amenity')
