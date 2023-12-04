@@ -19,8 +19,7 @@ class Amenities:
                 'housenumber': row['addr:housenumber'],
                 'street': row['addr:street'],
                 'country': self.country,
-                'latitude': row.geometry.centroid.y,
-                'longitude': row.geometry.centroid.x
+                'location': [row.geometry.centroid.x, row.geometry.centroid.y]
             }
             yield amenity
 
