@@ -26,6 +26,8 @@ class Street:
                     'latitude': row.geometry.centroid.y,
                     'longitude': row.geometry.centroid.x
                 }
+                address['full'] = f"{address['city']}, {address['street']}, {address['housenumber']}, {address['country']}"
+
             except KeyError as err:
                 self.progress.add_error(str(row), f"Cant get attribute {err}")
                 print(f"Error with {row}. Can't get row: {err}")
