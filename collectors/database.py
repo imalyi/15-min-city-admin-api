@@ -36,7 +36,7 @@ class MongoDatabase(Database):
         self.password = os.environ.get('MONGO_DB_PASSWORD', 'gmaps')
         self.host = os.environ.get('MONGO_DB_HOST', '192.168.0.100')
         self.port = os.environ.get('MONGO_DB_PORT', 27017)
-        self.db_name = os.environ.get('MONGO_DB_NAME', 'gmaps')
+        self.db_name = os.environ.get('MONGO_DB_NAME', '15min')
         self.collection_name = collection_name
         self.connect_str = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
         self._connect()

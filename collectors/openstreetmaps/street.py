@@ -23,10 +23,9 @@ class Street:
                     'housenumber': row.get('addr:housenumber', ''),
                     'street': row.get('addr:street', ''),
                     'country': self.country,
-                    'latitude': row.geometry.centroid.y,
-                    'longitude': row.geometry.centroid.x
+                    'location': [row.geometry.centroid.x, row.geometry.centroid.y]
                 }
-                address['full'] = f"{address['city']}, {address['street']}, {address['housenumber']}, {address['country']}"
+                address['full'] = f"{address['city']}, {address['street']}, {address['housenumber']}"
 
             except KeyError as err:
                 self.progress.add_error(str(row), f"Cant get attribute {err}")
@@ -34,7 +33,6 @@ class Street:
                 continue
 
             try:
-                # Check if all fields are not None
                 if any(field is None or field == '' for field in address.values()):
                     print("None field found: ", address)
                     raise NoneFieldAtAddress
