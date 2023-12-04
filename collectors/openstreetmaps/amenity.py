@@ -1,6 +1,6 @@
 from pyrosm import OSM
-from gmaps_collector.database import get_database
-from openstreetmaps_collector.common import get_map
+from collectors.database import get_database
+from collectors.openstreetmaps.common import get_map
 
 
 class Amenities:

@@ -11,26 +11,6 @@ services:
             - '15672:15672'
         restart: unless-stopped
 
-    api:
-        image: malyyigor34/15_min_google_maps_parser_api:master
-        container_name: api
-        env_file:
-            - stack.env
-        command: ./start.sh
-        ports:
-            - "8111:8000"
-        restart: unless-stopped
-        depends_on:
-            db:
-                condition: service_started
-            mongo:
-                condition: service_started
-            celerybeats:
-                condition: service_started
-            worker:
-                condition: service_started
-        volumes:
-            - "./:/home/apps/google_maps_parser_api/: ro"
     celerybeats:
         image: malyyigor34/15_min_google_maps_parser_api:master
         container_name: api_celery_beats
@@ -83,9 +63,7 @@ services:
         restart: unless-stopped
         ports:
             - "8097:3000"
-        depends_on:
-            api:
-                condition: service_started
+
 
     userui:
       image: malyyigor34/15min-user-ui:development

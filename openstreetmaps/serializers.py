@@ -5,11 +5,11 @@ from .models import OSMTask, OSMTaskResult, OSMError
 class ErrorSerializer(serializers.ModelSerializer):
     class Meta:
         model = OSMError
-        fields = ['id', 'task_result', 'data', 'date', 'type']
+        fields = ['id', 'data', 'date', 'type']
 
 
 class TaskResultSerializer(serializers.ModelSerializer):
-    errors = serializers.SerializerMethodField()
+    errors = ErrorSerializer(many=True, read_only=True)
 
     class Meta:
         model = OSMTaskResult
@@ -25,7 +25,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OSMTask
-        fields = ['id', 'region', 'status', 'task_results']
+        fields = ['id', 'region', 'status', 'task_results', "schedule"]
 
     def get_status(self, obj):
         return obj.status

@@ -1,7 +1,5 @@
-import json
-
-from openstreetmaps_collector.common import get_map, NoneFieldAtAddress
-from gmaps_collector.database import get_database
+from collectors.openstreetmaps.common import get_map, NoneFieldAtAddress
+from collectors.database import get_database
 from pyrosm import OSM
 
 

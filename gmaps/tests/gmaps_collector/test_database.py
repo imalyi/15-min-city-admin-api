@@ -1,5 +1,5 @@
 from django.test import TestCase
-from gmaps_collector.database import Database, get_database, MongoDatabase, DummyDB
+from collectors.database import get_database, MongoDatabase, DummyDB
 import os
 
 

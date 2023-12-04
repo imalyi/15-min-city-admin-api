@@ -1,7 +1,7 @@
 import os
 from celery import Celery
-from gmaps_collector.collector import Collector
-from openstreetmaps_collector.street import Street
+from collectors.gmaps.collector import Collector
+from collectors.openstreetmaps.street import Street
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "google_maps_parser_api.settings")
 
@@ -27,3 +27,4 @@ def send_osm_task_to_collector(task_id: int):
     task_result = OSMTaskResult.objects.create(task_id=task_id)
     street = Street(region, task_result)
     street.update()
+    task_result.mark_as_done()

@@ -6,6 +6,6 @@ class NoneFieldAtAddress(Exception):
 
 
 def get_map(region: str) -> str:
-    fp = get_data(region, update=True, directory='tmp_maps')
+    fp = get_data(region, update=True)
     return fp
 

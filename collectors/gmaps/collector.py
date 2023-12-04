@@ -1,6 +1,5 @@
-import time
-from gmaps_collector.response import Response
-from gmaps_collector.database import get_database
+from collectors.gmaps.response import Response
+from collectors.database import get_database
 
 
 class Collector:

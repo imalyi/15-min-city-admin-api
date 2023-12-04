@@ -32,11 +32,11 @@ class DummyDB(Database):
 
 class MongoDatabase(Database):
     def __init__(self, collection_name: str) -> None:
-        self.username = os.environ.get('MONGO_DB_USERNAME')
-        self.password = os.environ.get('MONGO_DB_PASSWORD')
-        self.host = os.environ.get('MONGO_DB_HOST')
-        self.port = os.environ.get('MONGO_DB_PORT')
-        self.db_name = os.environ.get('MONGO_DB_NAME')
+        self.username = os.environ.get('MONGO_DB_USERNAME', 'gmaps')
+        self.password = os.environ.get('MONGO_DB_PASSWORD', 'gmaps')
+        self.host = os.environ.get('MONGO_DB_HOST', '192.168.0.100')
+        self.port = os.environ.get('MONGO_DB_PORT', 27017)
+        self.db_name = os.environ.get('MONGO_DB_NAME', 'gmaps')
         self.collection_name = collection_name
         self.connect_str = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
         self._connect()
