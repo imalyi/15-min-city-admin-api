@@ -16,12 +16,13 @@ class OSMTask(models.Model):
         if running_results.exists():
             return "RUNNING"
         latest_result = OSMTaskResult.objects.filter(task=self).order_by('-finish_date').first()
-        if latest_result and latest_result.errors == 0:
-            return "DONE"
-        elif latest_result and latest_result.errors > 0:
-            return "DONE_WITH_ERRORS"
-        else:
+        if not latest_result:
             return "NEVER RUN"
+        elif latest_result.items_collected > 0 and latest_result.errors == 0:
+            return "DONE"
+        elif latest_result and latest_result.errors.count() > 0:
+            return "DONE_WITH_ERRORS"
+
 
 
 class OSMTaskResult(models.Model):
