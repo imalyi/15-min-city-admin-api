@@ -1,83 +1,156 @@
-import json
-import unittest
-from datetime import datetime
 from django.test import TestCase
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
-from openstreetmaps.models import OSMTask, OSMTaskResult, OSMError, add_periodic_task
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
+from openstreetmaps.models import OSMTask, OSMTaskResult, OSMError
+from django.utils import timezone
+import json
 
-
-class OSMTaskModelTest(TestCase):
-
+class OSMTaskModelTests(TestCase):
     def setUp(self):
-        # Create a CrontabSchedule for testing
         self.schedule = CrontabSchedule.objects.create(
             minute="0",
             hour="0",
-            day_of_month="1",
-            month_of_year="*",
             day_of_week="*",
+            day_of_month="*",
+            month_of_year="*"
         )
 
+        self.osm_task = OSMTask.objects.create(
+            region="TestRegion",
+            schedule=self.schedule
+        )
 
-    @unittest.skip("bad test")
-    def test_osm_task_status(self):
-        #TODO fix this test
-        # Create an OSMTask with a related CrontabSchedule
-        osm_task = OSMTask.objects.create(region="Test Region", schedule=self.schedule)
+    def test_osm_task_status_never_run(self):
+        self.assertEqual(self.osm_task.status, "NEVER RUN")
 
-        # Test the status property
-        self.assertEqual(osm_task.status, "NEVER RUN")
+    def test_osm_task_status_running(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
+        self.assertEqual(self.osm_task.status, "RUNNING")
 
-        # Create an OSMTaskResult related to the OSMTask
-        osm_task_result = OSMTaskResult.objects.create(task=osm_task)
+    def test_osm_task_status_done(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task,
+            addresses_items_collected=10,
+            amenity_items_collected=5,
+            finish_date=timezone.now()
+        )
+        self.assertEqual(self.osm_task.status, "DONE")
 
-        # Update progress and mark as done
-        osm_task_result.update_progress(50)
-        osm_task_result.mark_as_done()
+    def test_osm_task_status_done_with_errors(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task,
+            finish_date=timezone.now()
+        )
+        OSMError.objects.create(task_result=osm_task_result, data="test", type="test")
+        self.assertEqual(self.osm_task.status, "DONE_WITH_ERRORS")
 
-        # Test the status property again
-        self.assertEqual(osm_task.status, "DONE")
 
-    def test_osm_task_result_methods(self):
-        osm_task = OSMTask.objects.create(region="Test Region", schedule=self.schedule)
-        osm_task_result = OSMTaskResult.objects.create(task=osm_task)
+class OSMTaskResultModelTests(TestCase):
 
-        # Test update_progress method
-        osm_task_result.update_progress(25)
-        self.assertEqual(osm_task_result.items_collected, 25)
+    def setUp(self):
+        self.schedule = CrontabSchedule.objects.create(
+            minute="0",
+            hour="0",
+            day_of_week="*",
+            day_of_month="*",
+            month_of_year="*"
+        )
 
-        # Test add_error method
-        osm_task_result.add_error(data="Test Error", type="Sample Type")
+        self.osm_task = OSMTask.objects.create(
+            region="TestRegion",
+            schedule=self.schedule
+        )
+
+    def test_update_address_progress(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
+        osm_task_result.update_address_progress(5)
+        self.assertEqual(osm_task_result.addresses_items_collected, 5)
+
+    def test_update_amenity_progress(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
+        osm_task_result.update_amenity_progress(3)
+        self.assertEqual(osm_task_result.amenity_items_collected, 3)
+
+    def test_add_error(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
+        osm_task_result.add_error(data="Error data", type="Error type")
         self.assertEqual(osm_task_result.errors.count(), 1)
 
-        # Test mark_as_done method
+    def test_mark_as_done(self):
+        osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
         osm_task_result.mark_as_done()
         self.assertIsNotNone(osm_task_result.finish_date)
 
 
-class OSMErrorModelTest(TestCase):
+class OSMErrorModelTests(TestCase):
 
-    def test_osm_error_model(self):
-        osm_task = OSMTask.objects.create(region="Test Region", schedule=CrontabSchedule.objects.create())
-        osm_task_result = OSMTaskResult.objects.create(task=osm_task)
+    def setUp(self):
+        self.schedule = CrontabSchedule.objects.create(
+            minute="0",
+            hour="0",
+            day_of_week="*",
+            day_of_month="*",
+            month_of_year="*"
+        )
 
-        # Test OSMError model
-        osm_error = OSMError.objects.create(task_result=osm_task_result, data="Error Data", type="Error Type")
+        self.osm_task = OSMTask.objects.create(
+            region="TestRegion",
+            schedule=self.schedule
+        )
 
-        self.assertEqual(osm_error.task_result, osm_task_result)
-        self.assertEqual(osm_error.data, "Error Data")
-        self.assertEqual(osm_error.type, "Error Type")
+        self.osm_task_result = OSMTaskResult.objects.create(
+            task=self.osm_task
+        )
+
+    def test_osm_error_creation(self):
+        OSMError.objects.create(
+            task_result=self.osm_task_result,
+            data="Error data",
+            type="Error type"
+        )
+        self.assertEqual(self.osm_task_result.errors.count(), 1)
 
 
-class SignalTest(TestCase):
+class OSMTaskSignalTests(TestCase):
 
-    def test_add_periodic_task_signal(self):
-        osm_task = OSMTask.objects.create(region="Test Region", schedule=CrontabSchedule.objects.create())
+    def setUp(self):
+        self.schedule = CrontabSchedule.objects.create(
+            minute="0",
+            hour="0",
+            day_of_week="*",
+            day_of_month="*",
+            month_of_year="*"
+        )
 
-        # Call the signal directly to simulate post_save
-        add_periodic_task(sender=OSMTask, instance=osm_task)
+        self.osm_task = OSMTask.objects.create(
+            region="TestRegion",
+            schedule=self.schedule
+        )
 
-        # Check if PeriodicTask has been created
-        periodic_task = PeriodicTask.objects.get(name=osm_task.region)
-        self.assertIsNotNone(periodic_task)
-        self.assertEqual(json.loads(periodic_task.args), [osm_task.id])
+    def test_add_periodic_task_existing(self):
+
+        self.assertEqual(PeriodicTask.objects.filter(name=self.osm_task.region).count(), 1)
+
+        # Trigger the signal
+        self.osm_task.save()
+
+        # Ensure the PeriodicTask is updated
+        periodic_task = PeriodicTask.objects.get(name=self.osm_task.region)
+        self.assertEqual(periodic_task.args, json.dumps([self.osm_task.id]))
+
+    def test_add_periodic_task_non_existing(self):
+        PeriodicTask.objects.all().delete()
+        self.assertEqual(PeriodicTask.objects.filter(name=self.osm_task.region).count(), 0)
+        self.osm_task.save()
+
+        # Ensure a new PeriodicTask is created
+        self.assertEqual(PeriodicTask.objects.filter(name=self.osm_task.region).count(), 1)

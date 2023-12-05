@@ -18,9 +18,9 @@ class OSMTask(models.Model):
         latest_result = OSMTaskResult.objects.filter(task=self).order_by('-finish_date').first()
         if not latest_result:
             return "NEVER RUN"
-        elif latest_result.items_collected > 0 and latest_result.errors == 0:
+        elif latest_result.addresses_items_collected > 0 and latest_result.amenity_items_collected > 0 and latest_result.errors.count() == 0 and latest_result.finish_date is not None:
             return "DONE"
-        elif latest_result and latest_result.errors.count() > 0:
+        elif latest_result.finish_date and latest_result.errors.count() > 0:
             return "DONE_WITH_ERRORS"
 
 

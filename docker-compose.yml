@@ -3,32 +3,67 @@ services:
     rabbitmq:
         container_name: "rabbitmq"
         image: rabbitmq:3.8-management-alpine
+        env_file:
+          - ./stack.env
         environment:
-            - RABBITMQ_DEFAULT_USER=${PIKA_USERNAME}
-            - RABBITMQ_DEFAULT_PASS=${PIKA_PASSWORD}
+          - RABBITMQ_DEFAULT_USER=${PIKA_USERNAME}
+          - RABBITMQ_DEFAULT_PASS=${PIKA_PASSWORD}
         ports:
-            - '5672:5672'
-            - '15672:15672'
+          - '5672:5672'
+          - '15672:15672'
         restart: unless-stopped
+        healthcheck:
+          test: rabbitmq-diagnostics -q ping
+          interval: 30s
+          timeout: 10s
+          retries: 3
+
+    api:
+        image: malyyigor34/15_min_google_maps_parser_api:master
+        container_name: api
+        env_file:
+            - ./stack.env
+        command: ./start.sh
+        ports:
+            - "8111:8000"
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_healthy
+            mongo:
+                condition: service_started
+            celerybeats:
+                condition: service_started
+            worker:
+                condition: service_started
+
+        healthcheck:
+              test: ["CMD", "ping", "-c", "1", "-W", "1", "127.0.0.1:8000"]
+              interval: 3s
+              timeout: 3s
+              retries: 10
+
 
     celerybeats:
         image: malyyigor34/15_min_google_maps_parser_api:master
         container_name: api_celery_beats
         env_file:
-            - stack.env
+            - ./stack.env
         command: celery -A google_maps_parser_api beat --loglevel=info
         depends_on:
-            - rabbitmq
+            rabbitmq:
+                condition: service_healthy
         restart: unless-stopped
 
     worker:
         image: malyyigor34/15_min_google_maps_parser_api:master
         container_name: api_celery_worker
         env_file:
-            - stack.env
+            - ./stack.env
         command: celery -A google_maps_parser_api worker --loglevel=info
         depends_on:
-            - rabbitmq
+            rabbitmq:
+                condition: service_healthy
         restart: unless-stopped
 
     db:
@@ -36,7 +71,7 @@ services:
         container_name: "db"
         restart: unless-stopped
         env_file:
-            -   stack.env
+            - ./stack.env
         environment:
             - MYSQL_DATABASE=${API_DB_NAME}
             - MYSQL_USER=${API_DB_USER}
@@ -46,10 +81,16 @@ services:
             - '3306:3306'
         volumes:
             - gmaps_api_db:/var/lib/mysql
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            timeout: 5s
+            retries: 10
 
     mongo:
         image: mongo
         restart: unless-stopped
+        env_file:
+            - ./stack.env
         environment:
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USERNAME}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
@@ -58,21 +99,17 @@ services:
         volumes:
             - gmaps_data_db:/data/db/
 
+
+
     webadmin:
         image: malyyigor34/15_min_google_maps_admin_ui:master
         restart: unless-stopped
         ports:
             - "8097:3000"
-
-
-    userui:
-      image: malyyigor34/15min-user-ui:development
-      ports:
-        - "9093:3000"
-      restart: unless-stopped
-
+        depends_on:
+            api:
+                condition: service_started
 
 volumes:
     gmaps_data_db:
     gmaps_api_db:
-    address_data:

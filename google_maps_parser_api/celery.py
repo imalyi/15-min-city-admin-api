@@ -28,6 +28,6 @@ def send_osm_task_to_collector(task_id: int):
     task_result = OSMTaskResult.objects.create(task_id=task_id)
     street = Street(region, task_result)
     street.update()
-    amenity = Amenity(region)
+    amenity = Amenity(region, task_result)
     amenity.update()
     task_result.mark_as_done()
