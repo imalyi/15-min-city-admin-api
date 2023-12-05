@@ -4,10 +4,11 @@ from collectors.openstreetmaps.common import get_map
 
 
 class Amenity:
-    def __init__(self, country: str) -> None:
+    def __init__(self, country: str, progress) -> None:
         self.country = country
         self.db = get_database('amenity')
         self.osm = OSM(get_map(country))
+        self.progress = progress
 
     @property
     def amenities(self):
@@ -21,6 +22,7 @@ class Amenity:
                 'country': self.country,
                 'location': [row.geometry.centroid.x, row.geometry.centroid.y]
             }
+            self.progress.update_amenity_progress(1)
             yield amenity
 
     def update(self):

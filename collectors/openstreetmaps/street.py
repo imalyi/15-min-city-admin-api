@@ -2,7 +2,6 @@ from collectors.openstreetmaps.common import get_map, NoneFieldAtAddress
 from collectors.database import get_database
 from pyrosm import OSM
 
-
 class Street:
     def __init__(self, country: str, progress) -> None:
         self.country = country
@@ -36,7 +35,7 @@ class Street:
                 if any(field is None or field == '' for field in address.values()):
                     print("None field found: ", address)
                     raise NoneFieldAtAddress
-                self.progress.update_progress(1)
+                self.progress.update_address_progress(1)
                 yield address
             except NoneFieldAtAddress:
                 continue
